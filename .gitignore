@@ -1,0 +1,26 @@
+﻿# Dependencies & Build
+node_modules/
+dist/
+.DS_Store
+
+# Environment & Secret Keys
+.env
+.env.*
+!.env.example
+serviceAccountKey.json
+firebase_*.json
+*.pem
+*.key
+
+# Migration & Scratch Test Scripts
+scripts/migrate-to-supabase.mjs
+migrate-emails.js
+backfill.mjs
+test-*.mjs
+test-*.js
+
+# Legacy & Scratch
+scratch/
+*.zip
+firebase-config.js
+**/firebase-config.js

@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --line: rgba(15, 23, 42, 0.08);
+    --muted: #f1f5f9;
+    --input-bg: #ffffff;
+    --teal: #26a695;
+    --teal-light: #167a6d;
+    --teal-dark: #0f5c52;
+    --text: #0f172a;
+    --sub: #475569;
+    --glow: 0 4px 15px rgba(38, 166, 149, 0.2);
+    --radius: 0.75rem;
+  }
+
+  .dark, html.dark {
+    color-scheme: dark;
+    --bg: #04080b; 
+    --panel: #0e1a20; 
+    --line: rgba(255, 255, 255, 0.08);
+    --muted: #13242c;
+    --input-bg: #0c171d;
+    --teal: #26a695; 
+    --teal-light: #52c8b8; 
+    --teal-dark: #167a6d; 
+    --text: #f0f8ff;
+    --sub: #82a8ba; 
+    --glow: 0 0 15px rgba(38, 166, 149, 0.45);
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.5s ease, color 0.5s ease;
+  }
+  html { scroll-behavior: smooth; }
+  ::selection { background: var(--teal); color: #000; }
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* Universal Input Fix to prevent white backgrounds and contrast bugs in dark mode */
+  input, textarea, select {
+    color: var(--text);
+  }
+
+  .dark input:not([type="checkbox"]):not([type="radio"]),
+  .dark textarea,
+  .dark select {
+    background-color: var(--input-bg, #0c171d);
+    color: var(--text, #f0f8ff);
+    border-color: var(--line, rgba(255, 255, 255, 0.12));
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--panel) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+/* Original App Background Effects */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 1px, transparent 3px),
+    radial-gradient(circle at 50% 0%, rgba(38, 166, 149, 0.15), transparent 60%);
+}
+
+/* Doodle Pattern Background */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("/doodle_seamless.png");
+  background-size: 380px;
+  background-repeat: repeat;
+  opacity: 0.08;
+  animation: doodleDrift 30s linear infinite;
+}
+
+.dark body::after {
+  opacity: 0.25;
+}
+
+@keyframes doodleDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 380px 380px; }
+}
+
+
+
+/* Blinking Glowing Status Dots Animation */
+@keyframes pulseGlowGreen {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px #22c55e, 0 0 12px rgba(34, 197, 94, 0.9), 0 0 20px rgba(34, 197, 94, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px #22c55e, 0 0 4px rgba(34, 197, 94, 0.3);
+    transform: scale(0.8);
+  }
+}
+
+@keyframes pulseGlowYellow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px #eab308, 0 0 12px rgba(234, 179, 8, 0.9), 0 0 20px rgba(234, 179, 8, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px #eab308, 0 0 4px rgba(234, 179, 8, 0.3);
+    transform: scale(0.8);
+  }
+}
+
+@keyframes pulseGlowRed {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px #ef4444, 0 0 12px rgba(239, 68, 68, 0.9), 0 0 20px rgba(239, 68, 68, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px #ef4444, 0 0 4px rgba(239, 68, 68, 0.3);
+    transform: scale(0.8);
+  }
+}
+
+@keyframes pulseGlowBlue {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px #3b82f6, 0 0 12px rgba(59, 130, 246, 0.9), 0 0 20px rgba(59, 130, 246, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px #3b82f6, 0 0 4px rgba(59, 130, 246, 0.3);
+    transform: scale(0.8);
+  }
+}
+
+@keyframes pulseGlowTeal {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px #26a695, 0 0 12px rgba(38, 166, 149, 0.9), 0 0 20px rgba(38, 166, 149, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 2px #26a695, 0 0 4px rgba(38, 166, 149, 0.3);
+    transform: scale(0.8);
+  }
+}
+
+.dot-glow-green, .status-dot-green {
+  background-color: #22c55e !important;
+  animation: pulseGlowGreen 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.dot-glow-yellow, .status-dot-yellow {
+  background-color: #eab308 !important;
+  animation: pulseGlowYellow 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.dot-glow-red, .status-dot-red {
+  background-color: #ef4444 !important;
+  animation: pulseGlowRed 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.dot-glow-blue, .status-dot-blue {
+  background-color: #3b82f6 !important;
+  animation: pulseGlowBlue 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.dot-glow-teal, .dot-glow-primary, .status-dot-primary {
+  background-color: #26a695 !important;
+  animation: pulseGlowTeal 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}

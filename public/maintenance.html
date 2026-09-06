@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sedang Maintenance - Dakwah TV Equipment</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font-display:'Bebas Neue',sans-serif;
+    --font-body:'Archivo',sans-serif;
+    --font-mono:'Space Mono',monospace;
+    --bg:#070d0c;--panel:#0e1a18;--line:#1e3330;--teal:#17c9ae;--teal-light:#6ff0d6;--teal-dark:#0f7a69;--text:#f1f6f4;--sub:#7fa39b;--amber:#ffbe3d;--glow:0 0 20px rgba(23,201,174,.35);
+  }
+  [data-theme="light"]{--bg:#f4faf8;--panel:#ffffff;--line:#d9e6e2;--teal:#0f9c85;--teal-light:#0d8570;--teal-dark:#0b6b58;--text:#0e211d;--sub:#5c7a73;--amber:#a5760a;--glow:0 0 20px rgba(15,156,133,.2);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:'Archivo',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 6vw;overflow-x:hidden;position:relative;transition:background .3s,color .3s;}
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 1px, transparent 3px),
+      radial-gradient(ellipse at 50% -10%, rgba(255,190,61,.10), transparent 60%);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(23,201,174,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23,201,174,.05) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse 60% 50% at 50% 30%, #000 0%, transparent 75%);
+    animation:gridDrift 30s linear infinite;
+  }
+  .doodle-bg{position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url("doodle_seamless.png"); background-size:380px; background-repeat:repeat; opacity:.4;}
+  @keyframes gridDrift{0%{background-position:0 0,0 0;}100%{background-position:48px 48px,48px 48px;}}
+  body > *{position:relative; z-index:1;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+
+  @keyframes fadeInUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
+  .logo{animation:fadeInUp .6s ease both;}
+  .tally{animation:fadeInUp .6s .1s ease both;}
+  h1{animation:fadeInUp .6s .18s ease both;}
+  .sub{animation:fadeInUp .6s .26s ease both;}
+  .panel-box{animation:fadeInUp .5s .34s ease both;}
+  footer{animation:fadeInUp .6s .5s ease both;}
+
+  .logo{height:56px;margin-bottom:24px;filter:drop-shadow(0 0 18px rgba(23,201,174,.25));}
+  .tally{display:flex;align-items:center;gap:10px;margin-bottom:14px;justify-content:center;}
+  .tally .dot{width:11px;height:11px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px var(--amber);animation:tallyPulse 2.2s ease-in-out infinite;}
+  @keyframes tallyPulse{0%,100%{opacity:1; box-shadow:0 0 14px var(--amber);} 50%{opacity:.55; box-shadow:0 0 6px var(--amber);}}
+  .tally span{font-family:var(--font-mono);letter-spacing:.2em;font-size:11px;color:var(--amber);text-transform:uppercase;}
+
+  .wrench-wrap{position:relative; width:64px; height:64px; margin-bottom:18px;}
+  .wrench{width:64px;height:64px;color:var(--amber);filter:drop-shadow(0 0 16px rgba(255,190,61,.3));animation:wrenchTurn 3.5s ease-in-out infinite;}
+  @keyframes wrenchTurn{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+  .gear{position:absolute; width:26px; height:26px; bottom:-6px; right:-10px; color:var(--teal); filter:drop-shadow(0 0 10px rgba(23,201,174,.4)); animation:gearSpin 4s linear infinite;}
+  @keyframes gearSpin{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
+
+  h1{font-family:var(--font-display);font-weight:800;font-size:clamp(34px,7vw,58px);letter-spacing:-0.01em;text-align:center;line-height:1.05;}
+  h1 span{color:var(--teal);}
+  .sub{color:var(--sub);text-align:center;margin-top:14px;font-size:15px;line-height:1.6;max-width:520px;}
+
+  .panel-box{margin-top:32px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;max-width:480px;width:100%;text-align:center;}
+  .panel-box .label{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--sub);text-transform:uppercase;margin-bottom:8px;}
+  .panel-box .msg{font-size:14px;color:var(--text);line-height:1.6;}
+
+  .wa-box{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;max-width:480px;width:100%;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;transition:.2s;animation:fadeInUp .5s .4s ease both;}
+  .wa-box:hover{border-color:#25D366; transform:translateY(-1px); box-shadow:0 4px 16px rgba(37,211,102,.2);}
+  .wa-box .wa-icon{width:18px;height:18px;flex-shrink:0;color:#25D366;}
+  .wa-box .wa-label{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--text);}
+
+  footer{margin-top:40px;color:var(--sub);font-size:12px;letter-spacing:.05em;display:flex;align-items:center;gap:10px;}
+  footer::before,footer::after{content:"";width:24px;height:1px;background:var(--line);}
+
+  .theme-toggle{position:fixed; top:20px; right:20px; z-index:20; width:42px; height:42px; border-radius:50%; background:var(--panel); border:1px solid var(--line); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s;}
+  .theme-toggle:hover{border-color:var(--teal); transform:translateY(-1px); box-shadow:0 4px 14px rgba(23,201,174,.25);}
+  .theme-toggle svg{width:18px;height:18px;}
+  .theme-toggle .sun{display:none;}
+  [data-theme="light"] .theme-toggle .moon{display:none;}
+  [data-theme="light"] .theme-toggle .sun{display:block;}
+
+  .admin-access{
+    position:fixed; top:20px; right:72px; z-index:20;
+    display:flex; align-items:center; gap:8px;
+    height:42px; padding:0 16px; border-radius:8px;
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-family:'Space Mono',monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    text-decoration:none; transition:.2s;
+  }
+  .admin-access:hover{border-color:var(--teal); transform:translateY(-1px); box-shadow:0 4px 14px rgba(23,201,174,.25);}
+  .admin-access .admin-icon{
+    width:16px; height:16px; flex-shrink:0;
+    animation:adminIconBlink 1.4s ease-in-out infinite;
+  }
+  @keyframes adminIconBlink{
+    0%,100%{ color:#9fe870; filter:drop-shadow(0 0 6px #9fe870); }
+    50%{ color:#ffd23f; filter:drop-shadow(0 0 7px #ffd23f); }
+  }
+</style>
+</head>
+<body>
+<div class="doodle-bg"></div>
+<a href="/admin" class="admin-access" title="Login Admin">
+  <svg class="admin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  LOGIN ADMIN
+</a>
+<button class="theme-toggle" id="theme-toggle" title="Ganti tema">
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+</button>
+<script>
+(function(){
+  const saved = localStorage.getItem('dtv-theme') || 'dark';
+  if(saved==='light') document.documentElement.setAttribute('data-theme','light');
+})();
+</script>
+
+<img src="logo.png" class="logo" alt="Dakwah TV">
+<div class="tally"><div class="dot"></div><span>Sedang Maintenance</span></div>
+
+<div class="wrench-wrap">
+  <svg class="wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.6-.6-.6-2.6 2.8-2.8z"/>
+  </svg>
+  <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</div>
+
+<h1>WEBSITE SEDANG<br><span>DIPERBARUI</span></h1>
+<p class="sub">Kami lagi update &amp; benerin sistem Equipment Library Dakwah TV. Sebentar lagi kelar, coba refresh beberapa saat lagi ya.</p>
+
+<div class="panel-box">
+  <div class="label">Info</div>
+  <div class="msg">Kalau ada kebutuhan mendesak soal peminjaman alat, silakan hubungi admin langsung lewat WhatsApp.</div>
+</div>
+
+<a href="https://wa.me/6288992806757?text=Halo%2C%20saya%20mau%20tanya%20soal%20website%20Dakwah%20TV%20Equipment%20yang%20lagi%20maintenance." class="wa-box" target="_blank">
+  <svg class="wa-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.48 1.34 5L2 22l5.19-1.36a9.94 9.94 0 0 0 4.85 1.24h.01c5.5 0 9.96-4.46 9.96-9.96 0-2.66-1.03-5.16-2.92-7.04A9.9 9.9 0 0 0 12.04 2zm0 18.2h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.55-3.7 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.17-.29.19-.53.06-.25-.12-1.05-.38-1.99-1.22-.74-.65-1.23-1.46-1.38-1.7-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.4 1.01 2.57.13.17 1.75 2.67 4.25 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg>
+  <span class="wa-label">WhatsApp Developer</span>
+</a>
+
+<footer>Dakwah TV · UINSA</footer>
+
+<script>
+  document.getElementById('theme-toggle').addEventListener('click', ()=>{
+    const isLight = document.documentElement.getAttribute('data-theme')==='light';
+    if(isLight){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('dtv-theme','dark'); }
+    else{ document.documentElement.setAttribute('data-theme','light'); localStorage.setItem('dtv-theme','light'); }
+  });
+</script>
+</body>
+</html>
