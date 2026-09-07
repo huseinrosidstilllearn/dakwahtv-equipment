@@ -108,11 +108,14 @@ export default function Admin() {
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
           if (profile && profile.role === 'admin') {
             setCurrentUser(user);
+            setAuthError('');
           } else {
-            navigate('/');
+            setCurrentUser(null);
+            setAuthError(`Akun terdeteksi (${user.email}) bukan akun Admin. Silakan masukkan kredensial akun Admin di bawah.`);
           }
         } catch (e) {
-          navigate('/');
+          setCurrentUser(null);
+          setAuthError('Gagal memverifikasi hak akses pengguna.');
         }
       } else {
         setCurrentUser(null);
@@ -275,13 +278,25 @@ export default function Admin() {
     e.preventDefault();
     setAuthError('');
     
-    const email = e.target.email?.value;
+    const email = e.target.email?.value?.trim();
     const password = e.target.password?.value;
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      
+      if (data?.user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+        if (!profile || profile.role !== 'admin') {
+          await supabase.auth.signOut();
+          setCurrentUser(null);
+          setAuthError(`Akun "${email}" bukan admin (role saat ini: ${profile?.role || 'user'}). Silakan gunakan akun yang memiliki hak akses Admin.`);
+          return;
+        }
+        setCurrentUser(data.user);
+        setAuthError('');
+      }
     } catch (err) {
-      setAuthError("Email/Password Salah");
+      setAuthError(err.message === 'Invalid login credentials' ? "Email atau Password Salah" : (err.message || "Email/Password Salah"));
     }
   };
 
