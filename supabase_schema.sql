@@ -166,6 +166,8 @@ create policy "Config is public" on config for select using (true);
 drop policy if exists "Admin updates config" on config;
 create policy "Admin updates config" on config for all using (
   exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+) with check (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
 );
 
 -- Activity Logs Policies

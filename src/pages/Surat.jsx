@@ -466,13 +466,19 @@ export default function Surat() {
           const bId = booking.id || booking._key;
           if (bId) {
             await supabase.from('bookings').update({ doc_url: r2Url }).eq('id', bId);
-            const { data: cfgSurat } = await supabase.from('config').select('value').eq('key', 'suratBookings').maybeSingle();
-            if (cfgSurat?.value && typeof cfgSurat.value === 'object') {
-              const updated = { ...cfgSurat.value };
-              if (updated[bId]) {
-                updated[bId].doc_url = r2Url;
-                updated[bId].pdf_url = r2Url;
-                await supabase.from('config').upsert({ key: 'suratBookings', value: updated }, { onConflict: 'key' });
+            if (isAdmin) {
+              try {
+                const { data: cfgSurat } = await supabase.from('config').select('value').eq('key', 'suratBookings').maybeSingle();
+                if (cfgSurat?.value && typeof cfgSurat.value === 'object') {
+                  const updated = { ...cfgSurat.value };
+                  if (updated[bId]) {
+                    updated[bId].doc_url = r2Url;
+                    updated[bId].pdf_url = r2Url;
+                    await supabase.from('config').upsert({ key: 'suratBookings', value: updated }, { onConflict: 'key' }).catch(() => {});
+                  }
+                }
+              } catch (cErr) {
+                console.warn("suratBookings cache sync warning:", cErr);
               }
             }
           }
@@ -553,21 +559,23 @@ export default function Surat() {
       if (error) throw error;
 
       // Update config/suratBookings cache
-      try {
-        const { data: cfgSurat } = await supabase.from('config').select('value').eq('key', 'suratBookings').maybeSingle();
-        if (cfgSurat?.value && typeof cfgSurat.value === 'object') {
-          const updated = { ...cfgSurat.value };
-          if (updated[bId]) {
-            updated[bId].status = 'approved';
-            if (finalPdfUrl) {
-              updated[bId].doc_url = finalPdfUrl;
-              updated[bId].pdf_url = finalPdfUrl;
+      if (isAdmin) {
+        try {
+          const { data: cfgSurat } = await supabase.from('config').select('value').eq('key', 'suratBookings').maybeSingle();
+          if (cfgSurat?.value && typeof cfgSurat.value === 'object') {
+            const updated = { ...cfgSurat.value };
+            if (updated[bId]) {
+              updated[bId].status = 'approved';
+              if (finalPdfUrl) {
+                updated[bId].doc_url = finalPdfUrl;
+                updated[bId].pdf_url = finalPdfUrl;
+              }
+              await supabase.from('config').upsert({ key: 'suratBookings', value: updated }, { onConflict: 'key' }).catch(() => {});
             }
-            await supabase.from('config').upsert({ key: 'suratBookings', value: updated }, { onConflict: 'key' });
           }
+        } catch (cErr) {
+          console.warn("Update cache warning:", cErr);
         }
-      } catch (cErr) {
-        console.warn("Update cache warning:", cErr);
       }
 
       // Update local booking state

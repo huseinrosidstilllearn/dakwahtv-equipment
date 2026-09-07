@@ -31,18 +31,10 @@ function App() {
             }, { onConflict: 'id' });
           }
 
-          // Record last login timestamp in config table (userAuthMetadata)
+          // Record last login timestamp directly into profiles table (RLS compliant)
           const nowIso = new Date().toISOString();
           if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            supabase.from('config').select('value').eq('key', 'userAuthMetadata').maybeSingle().then(({ data }) => {
-              const prev = (data && data.value) || {};
-              const nextMeta = {
-                ...prev,
-                [user.id]: { email: user.email, lastSignInAt: nowIso, createdAt: user.created_at },
-                [user.email.toLowerCase()]: { lastSignInAt: nowIso, createdAt: user.created_at }
-              };
-              supabase.from('config').upsert({ key: 'userAuthMetadata', value: nextMeta }, { onConflict: 'key' }).then(() => {}).catch(() => {});
-            }).catch(() => {});
+            supabase.from('profiles').update({ last_login: nowIso }).eq('id', user.id).then(() => {}).catch(() => {});
           }
         } catch (e) {
           console.error("Error syncing user:", e);
