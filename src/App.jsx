@@ -31,10 +31,12 @@ function App() {
             }, { onConflict: 'id' });
           }
 
-          // Record last login timestamp directly into profiles table (RLS compliant)
-          const nowIso = new Date().toISOString();
-          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            supabase.from('profiles').update({ last_login: nowIso }).eq('id', user.id).then(() => {}).catch(() => {});
+          // Record last login timestamp directly into profiles table if column exists (RLS compliant)
+          if (profile && 'last_login' in profile) {
+            const nowIso = new Date().toISOString();
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+              supabase.from('profiles').update({ last_login: nowIso }).eq('id', user.id).then(() => {}).catch(() => {});
+            }
           }
         } catch (e) {
           console.error("Error syncing user:", e);
