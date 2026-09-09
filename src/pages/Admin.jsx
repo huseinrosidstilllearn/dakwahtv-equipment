@@ -95,6 +95,7 @@ export default function Admin() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authError, setAuthError] = useState('');
   const [isVerifying, setIsVerifying] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     applyTheme(theme);
@@ -105,13 +106,19 @@ export default function Admin() {
     const checkUser = async (user) => {
       if (user) {
         try {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-          if (profile && profile.role === 'admin') {
+          let { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+          let role = (profile?.role || '').toLowerCase().trim();
+          if (!role && user.email) {
+            const { data: profEmail } = await supabase.from('profiles').select('role').ilike('email', user.email).maybeSingle();
+            role = (profEmail?.role || '').toLowerCase().trim();
+          }
+
+          if (role === 'admin') {
             setCurrentUser(user);
             setAuthError('');
           } else {
             setCurrentUser(null);
-            setAuthError(`Akun terdeteksi (${user.email}) bukan akun Admin. Silakan masukkan kredensial akun Admin di bawah.`);
+            setAuthError(`Akun terdeteksi (${user.email}) memiliki role "${role || 'user'}". Silakan login menggunakan akun Admin.`);
           }
         } catch (e) {
           setCurrentUser(null);
@@ -277,6 +284,7 @@ export default function Admin() {
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
+    setIsLoggingIn(true);
     
     const email = e.target.email?.value?.trim();
     const password = e.target.password?.value;
@@ -285,11 +293,17 @@ export default function Admin() {
       if (error) throw error;
       
       if (data?.user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
-        if (!profile || profile.role !== 'admin') {
+        let { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+        let role = (profile?.role || '').toLowerCase().trim();
+        if (!role && data.user.email) {
+          const { data: profEmail } = await supabase.from('profiles').select('role').ilike('email', data.user.email).maybeSingle();
+          role = (profEmail?.role || '').toLowerCase().trim();
+        }
+
+        if (role !== 'admin') {
           await supabase.auth.signOut();
           setCurrentUser(null);
-          setAuthError(`Akun "${email}" bukan admin (role saat ini: ${profile?.role || 'user'}). Silakan gunakan akun yang memiliki hak akses Admin.`);
+          setAuthError(`Akun "${email}" bukan admin (role saat ini: "${role || 'user'}"). Silakan gunakan akun yang memiliki hak akses Admin.`);
           return;
         }
         setCurrentUser(data.user);
@@ -297,6 +311,8 @@ export default function Admin() {
       }
     } catch (err) {
       setAuthError(err.message === 'Invalid login credentials' ? "Email atau Password Salah" : (err.message || "Email/Password Salah"));
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -2348,8 +2364,21 @@ export default function Admin() {
                 </div>
               )}
 
-              <button type="submit" className="w-full py-3.5 bg-primary text-primary-foreground font-black rounded-xl hover:bg-primary/90 transition-all flex justify-center items-center gap-2">
-                <Shield className="w-4 h-4" /> LOGIN KE DASHBOARD
+              <button 
+                type="submit" 
+                disabled={isLoggingIn}
+                className="w-full py-3.5 bg-primary text-primary-foreground font-black rounded-xl hover:bg-primary/90 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                    <span>MEMVERIFIKASI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-4 h-4" /> LOGIN KE DASHBOARD
+                  </>
+                )}
               </button>
             </form>
             

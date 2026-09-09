@@ -22,13 +22,13 @@ function App() {
           // Check if profile exists
           const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
           if (!profile) {
-            // Create default profile safely
-            await supabase.from('profiles').upsert({
+            // Create default profile safely only if it genuinely does not exist (never overwrite existing role)
+            await supabase.from('profiles').insert([{
               id: user.id,
               email: user.email,
               display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
               role: 'user'
-            }, { onConflict: 'id' });
+            }]).catch(() => {});
           }
 
           // Record last login timestamp directly into profiles table if column exists (RLS compliant)
