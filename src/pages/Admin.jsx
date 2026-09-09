@@ -2,6 +2,7 @@ import { normalizeBooking, fmtDate } from '../utils/normalize';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { uploadFileToR2 } from '../utils/uploader';
 import * as XLSX from 'xlsx';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
@@ -875,30 +876,11 @@ export default function Admin() {
     try {
       setIsUploading(true);
       let publicUrl = null;
-        if (newImgFile) {
-          const fileName = `${Date.now()}_${newImgFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          const workerUrl = import.meta.env.VITE_R2_WORKER_URL;
-          
-          if (!workerUrl) {
-            throw new Error("URL Cloudflare Worker belum di-setting! Hubungi teknisi.");
-          }
-
-          const response = await fetch(`${workerUrl}/${fileName}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'Bearer DakwahTV_Aman_2026',
-              'Content-Type': newImgFile.type || 'application/octet-stream'
-            },
-            body: newImgFile
-          });
-
-          if (!response.ok) {
-            throw new Error(`Gagal upload ke R2: ${response.statusText}`);
-          }
-
-          const responseData = await response.json();
-          publicUrl = responseData.url;
-        }
+      if (newImgFile) {
+        const fileName = `${Date.now()}_${newImgFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const result = await uploadFileToR2(newImgFile, fileName, { contentType: newImgFile.type });
+        publicUrl = result.url;
+      }
 
       const qty = parseInt(newQty, 10);
       const itemsToInsert = [];

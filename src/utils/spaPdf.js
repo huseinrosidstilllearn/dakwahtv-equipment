@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
+import { uploadFileToR2 } from './uploader';
 
 const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -364,27 +365,9 @@ export async function convertDocxViaGotenberg(docxBlob, gotenbergUrl) {
  */
 export async function uploadSpaPdfToR2(pdfBlob, filename) {
   const cleanName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const uploadUrl = `https://equipment-photo-uploader.dakwahtvteknis.workers.dev/spa-pdfs/${cleanName}`;
-
-  const res = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer DakwahTV_Aman_2026',
-      'Content-Type': 'application/pdf'
-    },
-    body: pdfBlob
-  });
-
-  if (!res.ok) {
-    throw new Error(`Gagal upload PDF ke Cloudflare R2: ${res.statusText}`);
-  }
-
-  const data = await res.json();
-  let finalUrl = data.url;
-  if (finalUrl && finalUrl.includes('.r2.dev')) {
-    finalUrl = finalUrl.replace(/https:\/\/[^/]+\.r2\.dev/, 'https://spa.dakwahtv.my.id');
-  }
-  return finalUrl; // Direct public URL from R2 via custom domain
+  const targetPath = `spa-pdfs/${cleanName}`;
+  const result = await uploadFileToR2(pdfBlob, targetPath, { contentType: 'application/pdf' });
+  return result.url;
 }
 
 /**

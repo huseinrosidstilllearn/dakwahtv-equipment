@@ -46,8 +46,8 @@
   # XSS Protection (legacy browsers)
   X-XSS-Protection: 1; mode=block
 
-  # Content Security Policy — allow Firebase, Google, WhatsApp, Fonnte, and Dakwah TV embedding
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fkdbgmcphqvejborcesc.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: *; connect-src 'self' https://fkdbgmcphqvejborcesc.supabase.co wss://fkdbgmcphqvejborcesc.supabase.co https://equipment-photo-uploader.dakwahtvteknis.workers.dev https://api.fonnte.com https://*.dakwahtv.com https://*.dakwahtv.my.id https://*.gotenberg.dev http://localhost:* https://demo.gotenberg.dev; frame-src 'self'; frame-ancestors 'self' https://*.pages.dev https://*.dakwahtv.my.id https://dakwahtv.my.id; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me; upgrade-insecure-requests
+  # Content Security Policy — allow Supabase, Google Fonts, and Cloudflare Pages
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://fkdbgmcphqvejborcesc.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: *; connect-src 'self' https://fkdbgmcphqvejborcesc.supabase.co wss://fkdbgmcphqvejborcesc.supabase.co https://equipment-photo-uploader.dakwahtvteknis.workers.dev https://api.fonnte.com https://*.dakwahtv.com https://*.dakwahtv.my.id https://*.gotenberg.dev http://localhost:* https://demo.gotenberg.dev; frame-src 'self'; frame-ancestors 'self' https://*.pages.dev https://*.dakwahtv.my.id https://dakwahtv.my.id; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me; upgrade-insecure-requests
 
   # CORS — restrict to same origin by default
   Access-Control-Allow-Origin: https://dakwahtvequipment.pages.dev

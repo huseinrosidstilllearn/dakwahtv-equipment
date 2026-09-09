@@ -110,26 +110,40 @@ export const sanitizeWaTemplate = (template, fallbackKey) => {
 };
 
 export const sendWhatsAppMessage = async (target, message) => {
-  const token = '6zWjLzHFtYJavkm7y3qT'; // Fonnte API Token
-
   if (!target || !message) return false;
 
   try {
-    const response = await fetch('https://api.fonnte.com/send', {
+    // 1. Send via secure Serverless Edge Function Proxy (Tokens shielded on Cloudflare edge)
+    const response = await fetch('/api/send-wa', {
       method: 'POST',
       headers: {
-        'Authorization': token,
+        'Content-Type': 'application/json',
       },
-      body: new URLSearchParams({
-        target: target,
-        message: message,
-        countryCode: '62', // Default to Indonesia
+      body: JSON.stringify({
+        target,
+        message,
+        countryCode: '62',
       }),
     });
 
-    const data = await response.json();
-    console.log('Fonnte Response:', data);
-    return data.status;
+    if (response.ok) {
+      const data = await response.json();
+      return data.status === true || data.status === 'true' || !!data.id;
+    }
+
+    // 2. Fallback for local development if running outside Cloudflare Pages
+    const devToken = import.meta.env.VITE_FONNTE_TOKEN;
+    if (devToken) {
+      const fbRes = await fetch('https://api.fonnte.com/send', {
+        method: 'POST',
+        headers: { 'Authorization': devToken },
+        body: new URLSearchParams({ target, message, countryCode: '62' }),
+      });
+      const data = await fbRes.json();
+      return data.status === true || data.status === 'true';
+    }
+
+    return false;
   } catch (error) {
     console.error('Error sending WhatsApp message:', error);
     return false;

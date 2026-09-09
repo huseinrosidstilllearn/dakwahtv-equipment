@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Check, XCircle, FileText, ChevronDown, AlertTriangle, Plus } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { uploadFileToR2 } from '../utils/uploader';
 
 const BK_STATUS_LABEL = {
   pending: "Menunggu Approval",
@@ -59,21 +60,8 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
       setIsUploading(true);
       try {
         const fileName = `${Date.now()}_${proofFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const workerUrl = import.meta.env.VITE_R2_WORKER_URL;
-        if (!workerUrl) throw new Error("VITE_R2_WORKER_URL belum diatur");
-        
-        const response = await fetch(`${workerUrl}/${fileName}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer DakwahTV_Aman_2026',
-            'Content-Type': proofFile.type || 'application/octet-stream'
-          },
-          body: proofFile
-        });
-        
-        if (!response.ok) throw new Error(`Upload gagal: ${response.statusText}`);
-        const data = await response.json();
-        proofUrl = data.url;
+        const result = await uploadFileToR2(proofFile, fileName, { contentType: proofFile.type });
+        proofUrl = result.url;
       } catch (e) {
         toast.error("Gagal upload foto bukti: " + e.message, "Upload Gagal");
         setIsUploading(false);

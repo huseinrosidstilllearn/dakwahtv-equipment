@@ -2,6 +2,7 @@ import { normalizeBooking, fmtDate } from '../utils/normalize';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { useToast } from '../context/ToastContext';
+import { uploadFileToR2 } from '../utils/uploader';
 import AuthModal from '../components/AuthModal';
 import CartModal from '../components/CartModal';
 import CalendarModal from '../components/CalendarModal';
@@ -325,16 +326,9 @@ export default function Katalog() {
         try {
           const uploadData = new FormData();
           uploadData.append('file', docFile);
-          const r2Res = await fetch('https://equipment-photo-uploader.dakwahtvteknis.workers.dev', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer DakwahTV_Aman_2026'
-            },
-            body: uploadData
-          });
-          const r2Data = await r2Res.json();
-          if (r2Data.success) {
-            docUrl = r2Data.url;
+          const r2Result = await uploadFileToR2(uploadData);
+          if (r2Result && r2Result.url) {
+            docUrl = r2Result.url;
           }
         } catch (upErr) {
           console.error("Gagal upload dokumen peminjaman:", upErr);

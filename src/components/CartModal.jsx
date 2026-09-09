@@ -125,7 +125,7 @@ export default function CartModal({ isOpen, onClose, cart = [], removeFromCart, 
                         const endInput = e.target.form?.end;
                         const conflicts = checkDateConflicts(e.target.value, endInput?.value);
                         if (conflicts && conflicts.length > 0) {
-                          setConflictWarn({ hasConflict: true, message: `⚠️ Alat berikut sudah terbooking pada tanggal tersebut: <strong>${conflicts.join(', ')}</strong>. Silakan pilih tanggal lain.` });
+                          setConflictWarn({ hasConflict: true, conflictItems: conflicts });
                         } else if (e.target.value && endInput?.value) {
                           setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
                         } else {
@@ -141,7 +141,7 @@ export default function CartModal({ isOpen, onClose, cart = [], removeFromCart, 
                         const startInput = e.target.form?.start;
                         const conflicts = checkDateConflicts(startInput?.value, e.target.value);
                         if (conflicts && conflicts.length > 0) {
-                          setConflictWarn({ hasConflict: true, message: `⚠️ Alat berikut sudah terbooking pada tanggal tersebut: <strong>${conflicts.join(', ')}</strong>. Silakan pilih tanggal lain.` });
+                          setConflictWarn({ hasConflict: true, conflictItems: conflicts });
                         } else if (startInput?.value && e.target.value) {
                           setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
                         } else {
@@ -156,7 +156,16 @@ export default function CartModal({ isOpen, onClose, cart = [], removeFromCart, 
             {conflictWarn && (
               <div className={`p-4 rounded-xl border flex items-start gap-3 shadow-sm ${conflictWarn.hasConflict ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-500'}`}>
                 {conflictWarn.hasConflict ? <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 shrink-0 mt-0.5" />}
-                <div className="text-xs leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: conflictWarn.message }}></div>
+                <div className="text-xs leading-relaxed font-medium">
+                  {conflictWarn.hasConflict ? (
+                    <>
+                      ⚠️ Alat berikut sudah terbooking pada tanggal tersebut:{' '}
+                      <strong className="underline underline-offset-2">{conflictWarn.conflictItems?.join(', ')}</strong>. Silakan pilih tanggal lain.
+                    </>
+                  ) : (
+                    conflictWarn.message
+                  )}
+                </div>
               </div>
             )}
             
