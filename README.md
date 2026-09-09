@@ -1,5 +1,5 @@
-﻿<div align="center">
-  <img src="./public/logo-hero.png" alt="Dakwah TV Equipment Logo" width="380" />
+<div align="center">
+  <img src="./public/logo-github.png" alt="Dakwah TV Equipment Logo" width="380" />
   
   # 🎥 Dakwah TV Equipment Library
   ### Enterprise-Grade Production Equipment Management & Automated Letter Pipeline
