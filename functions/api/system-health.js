@@ -28,7 +28,7 @@ export async function onRequest(context) {
 
   const customGotenberg = (body.gotenbergUrl || '').trim();
   const customTgToken = (body.telegramBotToken || context.env.TELEGRAM_BOT_TOKEN || '').trim();
-  const fonnteToken = (body.fonnteToken || context.env.FONNTE_TOKEN || '6zWjLzHFtYJavkm7y3qT').trim();
+  const fonnteToken = (body.fonnteToken || context.env.FONNTE_TOKEN || '').trim();
 
   const timeoutFetch = async (url, options = {}, timeoutMs = 6000) => {
     const controller = new AbortController();
@@ -123,6 +123,16 @@ export async function onRequest(context) {
 
     // 4. FONNTE WHATSAPP GATEWAY
     (async () => {
+      if (!fonnteToken) {
+        return {
+          id: 'whatsapp_fonnte',
+          name: 'Fonnte WhatsApp API Gateway',
+          endpoint: 'api.fonnte.com',
+          status: 'unconfigured',
+          latencyMs: 0,
+          message: 'FONNTE_TOKEN belum dikonfigurasi di Cloudflare Variables and Secrets.'
+        };
+      }
       const endpoint = 'https://api.fonnte.com/get-devices';
       const check = await timeoutFetch(endpoint, {
         method: 'POST',

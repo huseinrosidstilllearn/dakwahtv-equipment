@@ -1,4 +1,4 @@
-﻿export async function onRequestPost(context) {
+export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
     const { target, message, countryCode = '62' } = body;
@@ -10,7 +10,16 @@
     }
 
     // Secret Token read from Cloudflare Pages Environment Variables
-    const token = context.env.FONNTE_TOKEN || '6zWjLzHFtYJavkm7y3qT';
+    const token = context.env.FONNTE_TOKEN;
+    if (!token) {
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'FONNTE_TOKEN belum dikonfigurasi di Cloudflare Variables and Secrets.'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     const response = await fetch('https://api.fonnte.com/send', {
       method: 'POST',
