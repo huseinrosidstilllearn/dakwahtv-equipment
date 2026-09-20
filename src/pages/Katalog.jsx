@@ -9,6 +9,7 @@ import CalendarModal from '../components/CalendarModal';
 import Navbar from '../components/Navbar';
 import { Search, Filter, CalendarDays, AlertTriangle, CheckCircle2, AlertCircle, ShoppingCart, Plus, Calendar, Check, Minus, Trash2, Calendar as CalendarIcon, LogIn, LogOut, Info } from 'lucide-react';
 import { sendWhatsAppMessage, sanitizeWaTemplate, DEFAULT_WA_TEMPLATES } from '../utils/whatsapp';
+import { sendTelegramAlert, formatBookingTelegramMessage } from '../utils/telegram';
 import { sortCategories } from '../utils/categories';
 import { getSavedTheme, applyTheme } from '../utils/theme';
 
@@ -404,6 +405,30 @@ export default function Katalog() {
         userMessage = userMessage.replace(/\{link_surat\}/g, `https://dakwahtvequipment.pages.dev/surat/${bid}?auto=1&format=pdf`);
 
         sendWhatsAppMessage(userPhone, userMessage);
+      }
+
+      // 3. Send Telegram broadcast alert to crew group if enabled
+      try {
+        const { data: tgConfigs } = await supabase.from('config').select('key, value').in('key', ['telegramEnabled', 'telegramBotToken', 'telegramChatId']);
+        const tgMap = {};
+        if (tgConfigs) tgConfigs.forEach(c => { tgMap[c.key] = c.value; });
+        if (tgMap.telegramEnabled === true && tgMap.telegramChatId) {
+          const tgMsg = formatBookingTelegramMessage({
+            id: bid,
+            userName: form.name.value,
+            userDept: form.dept.value,
+            userPhone: form.phone.value,
+            dateStart: form.start.value,
+            dateEnd: form.end.value
+          }, cart);
+          sendTelegramAlert({
+            text: tgMsg,
+            chatId: tgMap.telegramChatId,
+            botToken: tgMap.telegramBotToken
+          }).catch(tgErr => console.warn("Background Telegram send error:", tgErr));
+        }
+      } catch (tgErr) {
+        console.warn("Telegram check error:", tgErr);
       }
 
       toast.success(`Booking berhasil diajukan dengan ID: ${bid}\nSistem telah mengirim notifikasi otomatis ke Admin.`, "Booking Berhasil");

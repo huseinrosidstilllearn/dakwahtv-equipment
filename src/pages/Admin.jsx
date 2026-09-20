@@ -10,11 +10,13 @@ import {
   Shield, LogOut, Sun, Moon, Calendar, Download, Megaphone, 
   Settings, Phone, CheckCircle2, AlertTriangle, AlertCircle, Search, Plus, X, Check, ArrowRightLeft,
   LayoutDashboard, CalendarCheck, CheckSquare, Camera, PackageSearch, Users, Wrench, FileSearch, BarChart2, History, Menu, Edit, Trash2, MapPin, FileText,
-  RefreshCw, Sparkles, ExternalLink
+  RefreshCw, Sparkles, ExternalLink, Activity, Bot, Send, Radio
 } from 'lucide-react';
 import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '../utils/whatsapp';
 import { renderAndUploadSpaPdfDirect } from '../utils/spaPdf';
 import { testGotenbergHealth, testGotenbergConvertSample, downloadTestPdfBlob, openPdfPreview, DEFAULT_GOTENBERG_URL } from '../utils/gotenbergTest';
+import { checkSystemHealth } from '../utils/systemHealth';
+import { sendTelegramAlert, testTelegramBotConnection, formatBookingStatusTelegramMessage } from '../utils/telegram';
 import { sortCategories } from '../utils/categories';
 import BookingDetailModal from '../components/BookingDetailModal';
 import ManualBookingModal from '../components/ManualBookingModal';
@@ -224,6 +226,20 @@ export default function Admin() {
           if (cfgMap.gotenbergUrl) {
             setGotenbergUrl(String(cfgMap.gotenbergUrl).trim());
           }
+          if (cfgMap.telegramEnabled !== undefined) {
+            setTelegramEnabled(cfgMap.telegramEnabled === true);
+          }
+          if (cfgMap.telegramBotToken) {
+            setTelegramBotToken(String(cfgMap.telegramBotToken).trim());
+          }
+          if (cfgMap.telegramChatId) {
+            setTelegramChatId(String(cfgMap.telegramChatId).trim());
+          }
+          // Initial background health watchdog check
+          checkSystemHealth({
+            gotenbergUrl: cfgMap.gotenbergUrl,
+            telegramBotToken: cfgMap.telegramBotToken
+          }).then(res => setHealthData(res)).catch(() => {});
           if (cfgMap.waTemplates && typeof cfgMap.waTemplates === 'object') {
             const sanitized = {};
             let hadCorruption = false;
@@ -354,6 +370,19 @@ export default function Admin() {
   const [gotenbergPingResult, setGotenbergPingResult] = useState(null);
   const [isConvertingGotenberg, setIsConvertingGotenberg] = useState(false);
   const [gotenbergConvertResult, setGotenbergConvertResult] = useState(null);
+
+  // Telegram Bot Notification States
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramBotToken, setTelegramBotToken] = useState('');
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [isTestingTelegram, setIsTestingTelegram] = useState(false);
+  const [telegramTestResult, setTelegramTestResult] = useState(null);
+
+  // System Health Watchdog States
+  const [showHealthModal, setShowHealthModal] = useState(false);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [healthData, setHealthData] = useState(null);
 
   // WA Templates Modal States
   const [showWaTemplateModal, setShowWaTemplateModal] = useState(false);
@@ -657,6 +686,24 @@ export default function Admin() {
         
         if (msg) {
           sendWhatsAppMessage(phone, msg).catch(err => console.warn("Background WA send warning:", err));
+        }
+      }
+
+      // Telegram Broadcast notification if enabled
+      if (telegramEnabled && telegramChatId) {
+        try {
+          const tgMsg = formatBookingStatusTelegramMessage({
+            booking: booking || { id: bookingKey },
+            newStatus,
+            adminEmail: currentUser?.email
+          });
+          sendTelegramAlert({
+            text: tgMsg,
+            chatId: telegramChatId,
+            botToken: telegramBotToken
+          }).catch(err => console.warn("Background Telegram send warning:", err));
+        } catch (tgErr) {
+          console.warn("Telegram dispatch error:", tgErr);
         }
       }
 
@@ -1097,6 +1144,65 @@ export default function Admin() {
       toast.error(err.message, "Error Konversi");
     } finally {
       setIsConvertingGotenberg(false);
+    }
+  };
+
+  const refreshHealthWatchdog = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const data = await checkSystemHealth({
+        gotenbergUrl,
+        telegramBotToken
+      });
+      setHealthData(data);
+      if (data?.overallStatus === 'healthy') {
+        toast.success("Semua layanan operasional & sehat.", "System Health");
+      } else if (data?.overallStatus === 'degraded') {
+        toast.warning("Ada layanan yang mengalami kendala/offline.", "System Warning");
+      }
+    } catch (err) {
+      toast.error("Gagal memeriksa status sistem: " + err.message, "Health Check Error");
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
+  const saveTelegramConfig = async () => {
+    try {
+      const updates = [
+        { key: 'telegramEnabled', value: telegramEnabled },
+        { key: 'telegramBotToken', value: telegramBotToken.trim() },
+        { key: 'telegramChatId', value: telegramChatId.trim() }
+      ];
+      for (const item of updates) {
+        const { error } = await supabase.from('config').upsert(item, { onConflict: 'key' });
+        if (error) throw error;
+      }
+      logActivity("Update Konfigurasi Telegram Bot", currentUser?.email);
+      toast.success("Konfigurasi Telegram Bot berhasil disimpan!", "Telegram Tersimpan");
+      setShowTelegramModal(false);
+      refreshHealthWatchdog();
+    } catch (e) {
+      toast.error("Gagal menyimpan konfigurasi Telegram: " + e.message, "Gagal Menyimpan");
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    setIsTestingTelegram(true);
+    setTelegramTestResult(null);
+    try {
+      const res = await testTelegramBotConnection(telegramBotToken, telegramChatId);
+      setTelegramTestResult(res);
+      if (res.success) {
+        toast.success(res.message, "Telegram Terhubung");
+      } else {
+        toast.error(res.message, "Gagal Kirim Pesan");
+      }
+    } catch (err) {
+      setTelegramTestResult({ success: false, message: err.message });
+      toast.error(err.message, "Error Telegram");
+    } finally {
+      setIsTestingTelegram(false);
     }
   };
 
@@ -2483,6 +2589,29 @@ export default function Admin() {
           <button className="px-3 py-1.5 bg-background text-foreground hover:bg-accent border border-border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5" onClick={() => setShowGotenbergModal(true)}>
             <FileText className="w-3.5 h-3.5 text-teal" /> Gotenberg PDF
           </button>
+          <button 
+            className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              telegramEnabled ? 'bg-sky-500/10 text-sky-500 border-sky-500/30' : 'bg-background text-foreground hover:bg-accent border-border'
+            }`}
+            onClick={() => setShowTelegramModal(true)}
+            title="Konfigurasi Bot Telegram"
+          >
+            <Bot className="w-3.5 h-3.5 text-sky-400" /> Telegram Bot
+          </button>
+          <button 
+            className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              healthData?.overallStatus === 'healthy' 
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
+                : healthData?.overallStatus === 'degraded'
+                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                : 'bg-background text-foreground hover:bg-accent border-border'
+            }`}
+            onClick={() => { setShowHealthModal(true); refreshHealthWatchdog(); }}
+            title="System Health & Watchdog"
+          >
+            <Activity className={`w-3.5 h-3.5 ${isCheckingHealth ? 'animate-pulse text-teal' : ''}`} />
+            {healthData?.overallStatus === 'healthy' ? 'Sistem Normal' : healthData?.overallStatus === 'degraded' ? 'Perhatian' : 'System Health'}
+          </button>
           
           <div className="h-6 w-px bg-border mx-1"></div>
           
@@ -3159,6 +3288,244 @@ export default function Admin() {
         </div>
       )}
       
+      {showHealthModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowHealthModal(false)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-xl p-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    System Health & Watchdog
+                    <span className={`w-2.5 h-2.5 rounded-full ${
+                      healthData?.overallStatus === 'healthy' ? 'bg-emerald-500' : 'bg-amber-500'
+                    } animate-pulse`}></span>
+                  </h3>
+                  <p className="text-[11px] text-foreground/60">Pemantau status & latensi real-time infrastruktur Dakwah TV</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowHealthModal(false)}
+                className="p-1.5 hover:bg-muted rounded-xl text-foreground/60 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Overall Summary Card */}
+            <div className={`p-4 rounded-xl text-xs mb-4 flex items-center justify-between ${
+              healthData?.overallStatus === 'healthy' 
+                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                : 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                <div>
+                  <div className="font-bold text-sm">
+                    {healthData?.overallStatus === 'healthy' ? 'Semua Sistem Beroperasi Normal' : 'Ada Layanan yang Perlu Diperiksa'}
+                  </div>
+                  <div className="text-[11px] opacity-80">
+                    Pembaruan: {healthData?.timestamp ? new Date(healthData.timestamp).toLocaleTimeString('id-ID') : 'Baru saja'} WIB
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={refreshHealthWatchdog}
+                disabled={isCheckingHealth}
+                className="px-3 py-1.5 bg-background border border-border hover:bg-accent rounded-lg text-xs font-bold text-foreground transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingHealth ? 'animate-spin text-teal' : ''}`} />
+                Periksa Ulang
+              </button>
+            </div>
+
+            {/* Service List Cards */}
+            <div className="space-y-2.5 mb-5">
+              {(healthData?.services || []).map((srv) => (
+                <div key={srv.id} className="p-3.5 bg-muted/25 hover:bg-muted/40 border border-border rounded-xl transition-colors">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-foreground">
+                      <span className={`w-2 h-2 rounded-full ${
+                        srv.status === 'up' ? 'bg-emerald-500' : srv.status === 'unconfigured' ? 'bg-zinc-400' : 'bg-destructive'
+                      }`}></span>
+                      {srv.name}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {srv.latencyMs > 0 && (
+                        <span className="text-[10px] font-mono text-foreground/60 bg-background px-2 py-0.5 rounded border border-border">
+                          {srv.latencyMs}ms
+                        </span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        srv.status === 'up' ? 'bg-emerald-500/20 text-emerald-500' : srv.status === 'unconfigured' ? 'bg-muted text-foreground/60' : 'bg-destructive/20 text-destructive'
+                      }`}>
+                        {srv.status === 'up' ? 'ONLINE' : srv.status === 'unconfigured' ? 'BELUM AKTIF' : 'OFFLINE'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-foreground/60 flex items-center justify-between">
+                    <span>{srv.message}</span>
+                    <span className="font-mono text-[10px] opacity-75">{srv.endpoint}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-border">
+              <button 
+                type="button" 
+                onClick={() => setShowHealthModal(false)}
+                className="px-5 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTelegramModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowTelegramModal(false)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold">
+                  <Bot className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Notifikasi Telegram Bot</h3>
+                  <p className="text-[11px] text-foreground/60">Broadcast alert gratis ke grup kru Dakwah TV</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowTelegramModal(false)}
+                className="p-1.5 hover:bg-muted rounded-xl text-foreground/60 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Enable Toggle Card */}
+            <div className="p-3.5 bg-muted/40 border border-border rounded-xl flex items-center justify-between mb-4">
+              <div>
+                <div className="text-xs font-bold text-foreground">Aktifkan Notifikasi Telegram</div>
+                <div className="text-[11px] text-foreground/60">Kirim alert saat booking baru atau status alat berubah</div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={telegramEnabled} 
+                  onChange={e => setTelegramEnabled(e.target.checked)} 
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
+              </label>
+            </div>
+
+            {/* Inputs */}
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block mb-1">
+                  Telegram Bot Token
+                </label>
+                <input 
+                  type="password"
+                  value={telegramBotToken}
+                  onChange={e => {
+                    setTelegramBotToken(e.target.value);
+                    setTelegramTestResult(null);
+                  }}
+                  placeholder="cth: 7123456789:AAHk1_xxxxxx_yyyyy"
+                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:border-sky-500 outline-none"
+                />
+                <span className="text-[10px] text-foreground/50 mt-1 block">Didapat dari @BotFather di Telegram saat membuat bot.</span>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block mb-1">
+                  Target Chat ID (Grup / Channel / User)
+                </label>
+                <input 
+                  type="text"
+                  value={telegramChatId}
+                  onChange={e => {
+                    setTelegramChatId(e.target.value);
+                    setTelegramTestResult(null);
+                  }}
+                  placeholder="cth: -1001234567890 (Grup) atau 123456789"
+                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:border-sky-500 outline-none"
+                />
+                <span className="text-[10px] text-foreground/50 mt-1 block">Tambahkan bot ke grup kru Anda sebagai Admin lalu masukkan Chat ID grup.</span>
+              </div>
+            </div>
+
+            {/* Test Message Section */}
+            <div className="p-3.5 bg-muted/20 border border-border rounded-xl space-y-2.5 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground/80 flex items-center gap-1.5">
+                  <Send className="w-3.5 h-3.5 text-sky-400" />
+                  Uji Coba Pengiriman Pesan
+                </span>
+                <button
+                  type="button"
+                  onClick={handleTestTelegram}
+                  disabled={isTestingTelegram || !telegramBotToken.trim() || !telegramChatId.trim()}
+                  className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {isTestingTelegram ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  Kirim Pesan Tes
+                </button>
+              </div>
+
+              {telegramTestResult && (
+                <div className={`p-3 rounded-xl text-xs animate-in fade-in flex items-center gap-2 ${
+                  telegramTestResult.success 
+                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}>
+                  {telegramTestResult.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                  <span className="leading-relaxed">{telegramTestResult.message}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Instructions Guide */}
+            <div className="p-3 bg-muted/30 border border-border rounded-xl text-[11px] text-foreground/70 space-y-1.5 mb-4">
+              <div className="font-bold text-foreground/90">Cara Mendapatkan Token & Chat ID:</div>
+              <ol className="list-decimal list-inside space-y-1 text-[10px] leading-relaxed">
+                <li>Buka Telegram, cari <b>@BotFather</b> lalu ketik <code>/newbot</code> untuk mendapatkan Bot Token.</li>
+                <li>Buat grup Telegram kru Dakwah TV, undang bot yang baru dibuat ke dalam grup.</li>
+                <li>Jadikan bot sebagai admin grup, lalu kirim pesan apa saja di grup.</li>
+                <li>Dapatkan Chat ID grup dengan forward pesan ke <b>@userinfobot</b> atau buka URL <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>.</li>
+              </ol>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end pt-3 border-t border-border">
+              <button 
+                type="button" 
+                onClick={() => setShowTelegramModal(false)}
+                className="px-4 py-2 text-xs font-bold text-foreground/70 hover:text-foreground transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+              <button 
+                type="button" 
+                onClick={saveTelegramConfig}
+                className="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 transition-all cursor-pointer shadow-md"
+              >
+                Simpan Konfigurasi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedBooking && (
         <BookingDetailModal 
           booking={selectedBooking} 
