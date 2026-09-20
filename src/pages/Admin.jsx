@@ -9,10 +9,12 @@ import Docxtemplater from 'docxtemplater';
 import { 
   Shield, LogOut, Sun, Moon, Calendar, Download, Megaphone, 
   Settings, Phone, CheckCircle2, AlertTriangle, AlertCircle, Search, Plus, X, Check, ArrowRightLeft,
-  LayoutDashboard, CalendarCheck, CheckSquare, Camera, PackageSearch, Users, Wrench, FileSearch, BarChart2, History, Menu, Edit, Trash2, MapPin, FileText
+  LayoutDashboard, CalendarCheck, CheckSquare, Camera, PackageSearch, Users, Wrench, FileSearch, BarChart2, History, Menu, Edit, Trash2, MapPin, FileText,
+  RefreshCw, Sparkles, ExternalLink
 } from 'lucide-react';
 import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '../utils/whatsapp';
 import { renderAndUploadSpaPdfDirect } from '../utils/spaPdf';
+import { testGotenbergHealth, testGotenbergConvertSample, downloadTestPdfBlob, openPdfPreview, DEFAULT_GOTENBERG_URL } from '../utils/gotenbergTest';
 import { sortCategories } from '../utils/categories';
 import BookingDetailModal from '../components/BookingDetailModal';
 import ManualBookingModal from '../components/ManualBookingModal';
@@ -348,6 +350,10 @@ export default function Admin() {
   // Gotenberg PDF Converter Modal States
   const [showGotenbergModal, setShowGotenbergModal] = useState(false);
   const [gotenbergUrl, setGotenbergUrl] = useState('');
+  const [isTestingGotenberg, setIsTestingGotenberg] = useState(false);
+  const [gotenbergPingResult, setGotenbergPingResult] = useState(null);
+  const [isConvertingGotenberg, setIsConvertingGotenberg] = useState(false);
+  const [gotenbergConvertResult, setGotenbergConvertResult] = useState(null);
 
   // WA Templates Modal States
   const [showWaTemplateModal, setShowWaTemplateModal] = useState(false);
@@ -1051,6 +1057,46 @@ export default function Admin() {
       setShowGotenbergModal(false);
     } catch (e) {
       toast.error("Gagal menyimpan Gotenberg URL: " + e.message, "Gagal Menyimpan");
+    }
+  };
+
+  const handleTestGotenbergPing = async (target) => {
+    const url = target || gotenbergUrl || DEFAULT_GOTENBERG_URL;
+    setIsTestingGotenberg(true);
+    setGotenbergPingResult(null);
+    try {
+      const res = await testGotenbergHealth(url);
+      setGotenbergPingResult(res);
+      if (res.success) {
+        toast.success(res.message, "Gotenberg Terhubung");
+      } else {
+        toast.error(res.message, "Koneksi Gagal");
+      }
+    } catch (err) {
+      setGotenbergPingResult({ success: false, message: err.message });
+      toast.error(err.message, "Error Uji Gotenberg");
+    } finally {
+      setIsTestingGotenberg(false);
+    }
+  };
+
+  const handleTestGotenbergConvert = async (target) => {
+    const url = target || gotenbergUrl || DEFAULT_GOTENBERG_URL;
+    setIsConvertingGotenberg(true);
+    setGotenbergConvertResult(null);
+    try {
+      const res = await testGotenbergConvertSample(url);
+      setGotenbergConvertResult(res);
+      if (res.success) {
+        toast.success(res.message, "Konversi PDF Berhasil");
+      } else {
+        toast.error(res.message, "Gagal Mengonversi");
+      }
+    } catch (err) {
+      setGotenbergConvertResult({ success: false, message: err.message });
+      toast.error(err.message, "Error Konversi");
+    } finally {
+      setIsConvertingGotenberg(false);
     }
   };
 
@@ -2783,42 +2829,205 @@ export default function Admin() {
 
       {showGotenbergModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGotenbergModal(false)}>
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-teal/10 text-teal flex items-center justify-center font-bold">
-                <FileText className="w-4 h-4" />
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal/10 text-teal flex items-center justify-center font-bold">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Server Gotenberg (Konversi PDF)</h3>
+                  <p className="text-[11px] text-foreground/60">Engine Headless LibreOffice & Chromium untuk Surat Resmi</p>
+                </div>
               </div>
-              <h3 className="text-lg font-bold">Server Gotenberg (Konversi PDF)</h3>
+              <button 
+                type="button"
+                onClick={() => setShowGotenbergModal(false)}
+                className="p-1.5 hover:bg-muted rounded-xl text-foreground/60 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             
-            <p className="text-xs text-foreground/70 mb-4 leading-relaxed">
-              Microservice API untuk konversi template dokumen (.docx) ke format PDF secara headless.
-            </p>
-
-            <div className="p-3 bg-muted/40 border border-border rounded-xl text-xs space-y-1.5 mb-4">
-              <div className="font-semibold text-foreground flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${gotenbergUrl ? 'bg-emerald-500' : 'bg-blue-500'}`}></span>
-                Status: {gotenbergUrl ? 'Custom Server Aktif' : 'Engine Native Vector JS (Default Aktif)'}
+            <div className="p-3.5 bg-muted/40 border border-border rounded-xl text-xs space-y-2 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-foreground flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${
+                    gotenbergPingResult?.success 
+                      ? 'bg-emerald-500 animate-pulse' 
+                      : gotenbergUrl ? 'bg-teal' : 'bg-blue-500'
+                  }`}></span>
+                  Status: {gotenbergUrl ? 'Server Kustom Terkonfigurasi' : 'Engine Native Vector JS (Client)'}
+                </div>
+                {gotenbergPingResult && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    gotenbergPingResult.success 
+                      ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' 
+                      : 'bg-destructive/20 text-destructive border border-destructive/30'
+                  }`}>
+                    {gotenbergPingResult.success ? `${gotenbergPingResult.latency}ms • UP` : 'OFFLINE'}
+                  </span>
+                )}
               </div>
-              <p className="text-foreground/60 text-[11px] leading-normal">
-                Jika dikosongkan, sistem menggunakan engine bawaan client-side yang sangat ringan (~30 KB) dan cepat tanpa dependensi server tambahan.
+              <p className="text-foreground/65 text-[11px] leading-relaxed">
+                Gotenberg mengubah template <code>.docx</code> SPA menjadi berkas PDF resmi dengan presisi tata letak 100% identik tanpa pergeseran elemen.
               </p>
             </div>
 
-            <div className="space-y-1.5 mb-6">
-              <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block">Gotenberg Endpoint URL</label>
+            <div className="space-y-1.5 mb-4">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block">Gotenberg Endpoint URL</label>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setGotenbergUrl(DEFAULT_GOTENBERG_URL);
+                    setGotenbergPingResult(null);
+                    setGotenbergConvertResult(null);
+                  }}
+                  className="text-[11px] text-teal hover:underline font-medium cursor-pointer"
+                >
+                  Gunakan URL Default
+                </button>
+              </div>
               <input 
                 type="text" 
                 value={gotenbergUrl} 
-                onChange={e => setGotenbergUrl(e.target.value)} 
-                placeholder="cth: https://gotenberg.dakwahtv.id atau http://localhost:3000" 
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:border-teal outline-none font-mono" 
+                onChange={e => {
+                  setGotenbergUrl(e.target.value);
+                  setGotenbergPingResult(null);
+                  setGotenbergConvertResult(null);
+                }} 
+                placeholder="cth: https://gotenberg.dakwahtv.my.id" 
+                className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:border-teal outline-none" 
               />
             </div>
+
+            {/* Testing Panel */}
+            <div className="p-3.5 bg-muted/20 border border-border rounded-xl space-y-3 mb-5">
+              <div className="text-xs font-bold text-foreground/80 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-teal" />
+                  Alat Uji & Diagnostik Server
+                </span>
+                <span className="text-[10px] text-foreground/50 font-normal">Real-Time Verification</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleTestGotenbergPing(gotenbergUrl)}
+                  disabled={isTestingGotenberg || !gotenbergUrl.trim()}
+                  className="px-3 py-2.5 bg-card hover:bg-accent text-foreground border border-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {isTestingGotenberg ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-teal" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  )}
+                  Uji Koneksi (Ping)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleTestGotenbergConvert(gotenbergUrl)}
+                  disabled={isConvertingGotenberg || !gotenbergUrl.trim()}
+                  className="px-3 py-2.5 bg-teal/10 hover:bg-teal/20 text-teal border border-teal/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {isConvertingGotenberg ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  Uji Konversi PDF
+                </button>
+              </div>
+
+              {/* Ping Result Box */}
+              {gotenbergPingResult && (
+                <div className={`p-3 rounded-xl text-xs space-y-1.5 animate-in fade-in ${
+                  gotenbergPingResult.success 
+                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold">
+                    {gotenbergPingResult.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                    <span>{gotenbergPingResult.success ? 'Koneksi Server Berhasil!' : 'Koneksi Gagal'}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">{gotenbergPingResult.message}</p>
+                  {gotenbergPingResult.details && (
+                    <div className="pt-1 text-[10px] font-mono opacity-80 flex flex-wrap gap-2 border-t border-emerald-500/20 mt-1">
+                      <span>LibreOffice: <b>{gotenbergPingResult.details?.libreoffice?.status || 'up'}</b></span>
+                      <span>•</span>
+                      <span>Chromium: <b>{gotenbergPingResult.details?.chromium?.status || 'up'}</b></span>
+                      {gotenbergPingResult.latency && (
+                        <>
+                          <span>•</span>
+                          <span>Latensi: <b>{gotenbergPingResult.latency}ms</b></span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Convert Result Box */}
+              {gotenbergConvertResult && (
+                <div className={`p-3 rounded-xl text-xs space-y-2 animate-in fade-in ${
+                  gotenbergConvertResult.success 
+                    ? 'bg-teal/10 border border-teal/30 text-teal-dark dark:text-teal' 
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold">
+                      {gotenbergConvertResult.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                      <span>{gotenbergConvertResult.success ? 'Dokumen PDF Berhasil Dibuat!' : 'Konversi Gagal'}</span>
+                    </div>
+                    {gotenbergConvertResult.success && gotenbergConvertResult.duration && (
+                      <span className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border">
+                        {(gotenbergConvertResult.duration / 1000).toFixed(2)}s
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">{gotenbergConvertResult.message}</p>
+                  {gotenbergConvertResult.pdfBlob && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => openPdfPreview(gotenbergConvertResult.pdfBlob)}
+                        className="px-2.5 py-1.5 bg-background border border-border hover:bg-accent rounded-lg text-[11px] font-bold text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <ExternalLink className="w-3 h-3 text-teal" />
+                        Buka Pratinjau
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadTestPdfBlob(gotenbergConvertResult.pdfBlob, 'test-gotenberg-sample.pdf')}
+                        className="px-2.5 py-1.5 bg-teal text-background hover:bg-teal-light rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download className="w-3 h-3" />
+                        Unduh Sample PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             
-            <div className="flex gap-3 justify-end pt-4 border-t border-border">
-              <button className="px-5 py-2.5 font-bold text-sm text-foreground/70 hover:text-foreground transition-colors" onClick={() => setShowGotenbergModal(false)}>Batal</button>
-              <button className="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:bg-primary/90 transition-colors" onClick={saveGotenbergUrl}>Simpan Konfigurasi</button>
+            <div className="flex gap-3 justify-end pt-3 border-t border-border">
+              <button 
+                type="button"
+                className="px-4 py-2 font-bold text-xs text-foreground/70 hover:text-foreground transition-colors cursor-pointer" 
+                onClick={() => setShowGotenbergModal(false)}
+              >
+                Tutup
+              </button>
+              <button 
+                type="button"
+                className="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 transition-all cursor-pointer shadow-md" 
+                onClick={saveGotenbergUrl}
+              >
+                Simpan Konfigurasi
+              </button>
             </div>
           </div>
         </div>

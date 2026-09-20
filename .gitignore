@@ -1,4 +1,4 @@
-﻿# Dependencies & Build
+# Dependencies & Build
 node_modules/
 dist/
 .DS_Store
@@ -16,8 +16,8 @@ firebase_*.json
 scripts/migrate-to-supabase.mjs
 migrate-emails.js
 backfill.mjs
-test-*.mjs
-test-*.js
+/test-*.mjs
+/test-*.js
 
 # Legacy & Scratch
 scratch/

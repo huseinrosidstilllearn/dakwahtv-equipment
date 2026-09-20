@@ -36,6 +36,7 @@ import {
   downloadBlob,
   preloadSpaImages 
 } from '../utils/spaPdf';
+import { testGotenbergHealth, testGotenbergConvertSample, downloadTestPdfBlob, openPdfPreview, DEFAULT_GOTENBERG_URL } from '../utils/gotenbergTest';
 import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '../utils/whatsapp';
 
 const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -81,6 +82,8 @@ export default function Surat() {
   const [gotenbergInputUrl, setGotenbergInputUrl] = useState('');
   const [gotenbergTestStatus, setGotenbergTestStatus] = useState(null);
   const [isTestingGotenberg, setIsTestingGotenberg] = useState(false);
+  const [isConvertingGotenberg, setIsConvertingGotenberg] = useState(false);
+  const [gotenbergConvertResult, setGotenbergConvertResult] = useState(null);
   const [conversionStage, setConversionStage] = useState('');
   const [generationNotice, setGenerationNotice] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -317,32 +320,36 @@ export default function Surat() {
   };
 
   const handleTestGotenberg = async (urlToTest) => {
-    const target = (urlToTest || gotenbergInputUrl || gotenbergUrl || '').trim().replace(/\/+$/, '');
-    if (!target) {
-      setGotenbergTestStatus({ success: false, message: 'Harap masukkan URL Gotenberg.' });
-      return;
-    }
+    const target = (urlToTest || gotenbergInputUrl || gotenbergUrl || DEFAULT_GOTENBERG_URL).trim().replace(/\/+$/, '');
     setIsTestingGotenberg(true);
     setGotenbergTestStatus(null);
     try {
-      const res = await fetch(`${target}/health`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      const data = await res.json();
-      if (data.status === 'up') {
-        setGotenbergTestStatus({ 
-          success: true, 
-          message: `Koneksi berhasil! Status LibreOffice: ${data.details?.libreoffice?.status || 'up'}` 
-        });
-      } else {
-        setGotenbergTestStatus({ success: false, message: `Status Gotenberg: ${JSON.stringify(data)}` });
-      }
+      const res = await testGotenbergHealth(target);
+      setGotenbergTestStatus(res);
     } catch (err) {
       setGotenbergTestStatus({ 
         success: false, 
-        message: `Gagal terhubung (${err.message}). Pastikan server aktif dan mengizinkan CORS.` 
+        message: `Gagal terhubung: ${err.message}` 
       });
     } finally {
       setIsTestingGotenberg(false);
+    }
+  };
+
+  const handleTestGotenbergConvert = async (urlToTest) => {
+    const target = (urlToTest || gotenbergInputUrl || gotenbergUrl || DEFAULT_GOTENBERG_URL).trim().replace(/\/+$/, '');
+    setIsConvertingGotenberg(true);
+    setGotenbergConvertResult(null);
+    try {
+      const res = await testGotenbergConvertSample(target);
+      setGotenbergConvertResult(res);
+    } catch (err) {
+      setGotenbergConvertResult({ 
+        success: false, 
+        message: `Gagal konversi: ${err.message}` 
+      });
+    } finally {
+      setIsConvertingGotenberg(false);
     }
   };
 
@@ -1473,42 +1480,145 @@ export default function Surat() {
             </div>
 
             <div className="space-y-1.5 mb-4">
-              <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block">
-                Gotenberg Endpoint URL
-              </label>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={gotenbergInputUrl} 
-                  onChange={e => {
-                    setGotenbergInputUrl(e.target.value);
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-foreground/70 uppercase tracking-wider block">
+                  Gotenberg Endpoint URL
+                </label>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setGotenbergInputUrl(DEFAULT_GOTENBERG_URL);
                     setGotenbergTestStatus(null);
-                  }} 
-                  placeholder="https://gotenberg.dakwahtv.com atau http://localhost:3000" 
-                  className="flex-1 bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:border-teal outline-none" 
-                />
+                    setGotenbergConvertResult(null);
+                  }}
+                  className="text-[11px] text-teal hover:underline font-medium cursor-pointer"
+                >
+                  Gunakan URL Default
+                </button>
+              </div>
+              <input 
+                type="text" 
+                value={gotenbergInputUrl} 
+                onChange={e => {
+                  setGotenbergInputUrl(e.target.value);
+                  setGotenbergTestStatus(null);
+                  setGotenbergConvertResult(null);
+                }} 
+                placeholder="https://gotenberg.dakwahtv.my.id" 
+                className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:border-teal outline-none" 
+              />
+            </div>
+
+            {/* Testing Panel */}
+            <div className="p-3 bg-muted/20 border border-border rounded-xl space-y-3 mb-4">
+              <div className="text-xs font-bold text-foreground/80 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-teal" />
+                  Alat Uji & Diagnostik Server
+                </span>
+                <span className="text-[10px] text-foreground/50 font-normal">Real-Time Verification</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => handleTestGotenberg(gotenbergInputUrl)}
                   disabled={isTestingGotenberg || !gotenbergInputUrl.trim()}
-                  className="px-3.5 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+                  className="px-3 py-2 bg-card hover:bg-accent text-foreground border border-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
                 >
-                  {isTestingGotenberg ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-teal" />}
-                  Test
+                  {isTestingGotenberg ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-teal" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  )}
+                  Uji Koneksi (Ping)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleTestGotenbergConvert(gotenbergInputUrl)}
+                  disabled={isConvertingGotenberg || !gotenbergInputUrl.trim()}
+                  className="px-3 py-2 bg-teal/10 hover:bg-teal/20 text-teal border border-teal/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {isConvertingGotenberg ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  Uji Konversi PDF
                 </button>
               </div>
-            </div>
 
-            {gotenbergTestStatus && (
-              <div className={`p-3 rounded-2xl text-xs mb-4 flex items-center gap-2.5 ${
-                gotenbergTestStatus.success 
-                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
-                  : 'bg-destructive/10 border border-destructive/30 text-destructive'
-              }`}>
-                {gotenbergTestStatus.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
-                <div className="leading-tight">{gotenbergTestStatus.message}</div>
-              </div>
-            )}
+              {/* Ping Result Box */}
+              {gotenbergTestStatus && (
+                <div className={`p-3 rounded-xl text-xs space-y-1.5 animate-in fade-in ${
+                  gotenbergTestStatus.success 
+                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold">
+                    {gotenbergTestStatus.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                    <span>{gotenbergTestStatus.success ? 'Koneksi Server Berhasil!' : 'Koneksi Gagal'}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">{gotenbergTestStatus.message}</p>
+                  {gotenbergTestStatus.details && (
+                    <div className="pt-1 text-[10px] font-mono opacity-80 flex flex-wrap gap-2 border-t border-emerald-500/20 mt-1">
+                      <span>LibreOffice: <b>{gotenbergTestStatus.details?.libreoffice?.status || 'up'}</b></span>
+                      <span>•</span>
+                      <span>Chromium: <b>{gotenbergTestStatus.details?.chromium?.status || 'up'}</b></span>
+                      {gotenbergTestStatus.latency && (
+                        <>
+                          <span>•</span>
+                          <span>Latensi: <b>{gotenbergTestStatus.latency}ms</b></span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Convert Result Box */}
+              {gotenbergConvertResult && (
+                <div className={`p-3 rounded-xl text-xs space-y-2 animate-in fade-in ${
+                  gotenbergConvertResult.success 
+                    ? 'bg-teal/10 border border-teal/30 text-teal-dark dark:text-teal' 
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold">
+                      {gotenbergConvertResult.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                      <span>{gotenbergConvertResult.success ? 'Dokumen PDF Berhasil Dibuat!' : 'Konversi Gagal'}</span>
+                    </div>
+                    {gotenbergConvertResult.success && gotenbergConvertResult.duration && (
+                      <span className="text-[10px] font-mono bg-background/50 px-2 py-0.5 rounded border border-border">
+                        {(gotenbergConvertResult.duration / 1000).toFixed(2)}s
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">{gotenbergConvertResult.message}</p>
+                  {gotenbergConvertResult.pdfBlob && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => openPdfPreview(gotenbergConvertResult.pdfBlob)}
+                        className="px-2.5 py-1.5 bg-background border border-border hover:bg-accent rounded-lg text-[11px] font-bold text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <ExternalLink className="w-3 h-3 text-teal" />
+                        Buka Pratinjau
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadTestPdfBlob(gotenbergConvertResult.pdfBlob, 'test-gotenberg-sample.pdf')}
+                        className="px-2.5 py-1.5 bg-teal text-background hover:bg-teal-light rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download className="w-3 h-3" />
+                        Unduh Sample PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="p-3 bg-muted/40 border border-border rounded-2xl text-[11px] text-foreground/60 space-y-1.5 mb-5">
               <div className="font-bold text-foreground/80">Perintah Docker di Server Dakwah TV:</div>
