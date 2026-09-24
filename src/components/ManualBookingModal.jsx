@@ -3,8 +3,9 @@ import { X, Search, Plus, Trash2, Calendar, User, Phone, MapPin, Hash, Briefcase
 import { supabase } from '../supabase';
 import { useToast } from '../context/ToastContext';
 import { sortCategories } from '../utils/categories';
+import { sendTelegramAlert, formatManualBookingTelegramMessage } from '../utils/telegram';
 
-export default function ManualBookingModal({ isOpen, onClose, inventory, currentUser }) {
+export default function ManualBookingModal({ isOpen, onClose, inventory, currentUser, telegramConfig, onBookingCreated }) {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -72,7 +73,55 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
       await supabase.from('activity_logs').insert([{
         action: `Admin membuat booking manual (${formData.name})`, email: currentUser?.email || 'Admin', timestamp: new Date().toISOString() }]);
 
+      // Telegram Broadcast notification if enabled
+      let effectiveTelegramConfig = telegramConfig;
+      if (!effectiveTelegramConfig || effectiveTelegramConfig.enabled === undefined) {
+        try {
+          const { data: cfgRows } = await supabase.from('config').select('*').in('key', ['telegramEnabled', 'telegramBotToken', 'telegramChatId']);
+          if (cfgRows) {
+            const cfgMap = {};
+            cfgRows.forEach(r => { cfgMap[r.key] = r.value; });
+            effectiveTelegramConfig = {
+              enabled: cfgMap.telegramEnabled === true,
+              botToken: cfgMap.telegramBotToken || '',
+              chatId: cfgMap.telegramChatId || ''
+            };
+          }
+        } catch (cfgErr) {
+          console.warn("Error reading config for Telegram:", cfgErr);
+        }
+      }
+
+      if (effectiveTelegramConfig?.enabled && effectiveTelegramConfig?.chatId) {
+        try {
+          const tgMsg = formatManualBookingTelegramMessage({
+            booking: {
+              id: bid,
+              userName: formData.name,
+              userDept: formData.dept,
+              userPhone: formData.phone,
+              purpose: formData.purpose,
+              dateStart: formData.dateStart,
+              dateEnd: formData.dateEnd,
+              status: formData.initialStatus || 'approved'
+            },
+            items: cart,
+            adminEmail: currentUser?.email
+          });
+          sendTelegramAlert({
+            text: tgMsg,
+            chatId: effectiveTelegramConfig.chatId,
+            botToken: effectiveTelegramConfig.botToken
+          }).catch(err => console.warn("Background Telegram manual booking warning:", err));
+        } catch (tgErr) {
+          console.warn("Telegram manual booking dispatch error:", tgErr);
+        }
+      }
+
       toast.success("Booking manual berhasil ditambahkan!", "Booking Sukses");
+      if (onBookingCreated) {
+        onBookingCreated();
+      }
       onClose();
     } catch (err) {
       console.error(err);

@@ -159,6 +159,102 @@ export function formatBookingStatusTelegramMessage({ booking, newStatus, adminEm
     `👤 *Peminjam:* ${booking.userName || booking.name || '-'}\n` +
     `📺 *Program:* ${booking.userDept || booking.dept || '-'}\n` +
     `📌 *Status Baru:* *${label}*\n` +
-    `👮 *Diperbarui Oleh:* ${adminEmail || 'Admin'}\n` +
+    `👮 *Diperbarui Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
     `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`;
 }
+
+/**
+ * Format booking deletion alert for Telegram broadcast
+ * @param {Object} options
+ * @param {Object} options.booking Booking details
+ * @param {string} [options.adminEmail] Admin who deleted the booking
+ * @returns {string} Markdown formatted message
+ */
+export function formatBookingDeletedTelegramMessage({ booking, adminEmail }) {
+  const fmtDate = (dStr) => {
+    if (!dStr) return '-';
+    const clean = String(dStr).split('T')[0];
+    return clean.split('-').reverse().join('/');
+  };
+
+  const bookingId = booking.id || booking._key || '-';
+  const name = booking.userName || booking.user_name || booking.name || '-';
+  const dept = booking.userDept || booking.dept || '-';
+  const startDate = fmtDate(booking.dateStart || booking.date_start || booking.startDate);
+  const endDate = fmtDate(booking.dateEnd || booking.date_end || booking.endDate);
+  
+  let itemSummary = '';
+  const rawItems = booking.items || booking.booking_items;
+  if (Array.isArray(rawItems) && rawItems.length > 0) {
+    const list = rawItems.map((it, idx) => {
+      const itName = it.name || it.item_name || (it.inventory && it.inventory.name) || 'Alat';
+      return `  ${idx + 1}. ${itName}`;
+    }).slice(0, 5).join('\n');
+    const extraCount = rawItems.length > 5 ? `\n  _...dan ${rawItems.length - 5} alat lainnya_` : '';
+    itemSummary = `📦 *Peralatan Terkait (${rawItems.length} item):*\n${list}${extraCount}\n`;
+  }
+
+  return `🗑️ *PENGHAPUSAN BOOKING ALAT*\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🆔 *ID:* \`#${bookingId}\`\n` +
+    `👤 *Peminjam:* ${name}\n` +
+    `📺 *Program/Unit:* ${dept}\n` +
+    `📅 *Jadwal:* ${startDate} s/d ${endDate}\n` +
+    `${itemSummary}` +
+    `👮 *Dihapus Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
+    `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB\n\n` +
+    `⚠️ *Keterangan:* Peminjaman telah dihapus permanen oleh admin.`;
+}
+
+/**
+ * Format manual booking creation alert for Telegram broadcast
+ * @param {Object} options
+ * @param {Object} options.booking Booking details
+ * @param {Array} [options.items] List of selected items
+ * @param {string} [options.adminEmail] Admin who created the booking
+ * @returns {string} Markdown formatted message
+ */
+export function formatManualBookingTelegramMessage({ booking, items = [], adminEmail }) {
+  const fmtDate = (dStr) => {
+    if (!dStr) return '-';
+    const clean = String(dStr).split('T')[0];
+    return clean.split('-').reverse().join('/');
+  };
+
+  const statusLabels = {
+    approved: '✅ Disetujui Langsung',
+    pending: '⏳ Menunggu Approval',
+    active: '🎥 Langsung Dipinjam (Picked Up)',
+    letter_ready: '📄 Siap Diambil'
+  };
+
+  const bookingId = booking.id || '-';
+  const name = booking.userName || booking.name || '-';
+  const dept = booking.userDept || booking.dept || '-';
+  const phone = booking.userPhone || booking.phone || '-';
+  const purpose = booking.purpose || '';
+  const startDate = fmtDate(booking.dateStart || booking.date_start);
+  const endDate = fmtDate(booking.dateEnd || booking.date_end);
+  const statusLabel = statusLabels[booking.status] || booking.status || 'Disetujui Langsung';
+
+  const itemListText = items && items.length > 0
+    ? items.map((it, idx) => `  ${idx + 1}. *${it.name || it.item_name || 'Alat'}* (${it.category || it.cat || it.kategori || 'Unit'})`).join('\n')
+    : '  _(Daftar alat tercantum di sistem)_';
+
+  return `📝 *BOOKING MANUAL DIBUAT (ADMIN)*\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🆔 *ID:* \`#${bookingId}\`\n` +
+    `👤 *Peminjam:* ${name}\n` +
+    `📺 *Program/Unit:* ${dept}\n` +
+    `📱 *WhatsApp:* \`${phone}\`\n` +
+    `📅 *Periode:* ${startDate} s/d ${endDate}\n` +
+    `📌 *Status Awal:* *${statusLabel}*\n` +
+    (purpose ? `🎯 *Keperluan:* ${purpose}\n` : '') +
+    `\n📦 *Daftar Peralatan (${items.length} item):*\n` +
+    `${itemListText}\n\n` +
+    `👮 *Dibuat Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
+    `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB\n\n` +
+    `🔗 *Buka Dashboard Admin:*\n` +
+    `https://dakwahtvequipment.pages.dev/admin`;
+}
+

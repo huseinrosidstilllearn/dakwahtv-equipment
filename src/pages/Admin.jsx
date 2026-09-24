@@ -16,7 +16,7 @@ import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '.
 import { renderAndUploadSpaPdfDirect } from '../utils/spaPdf';
 import { testGotenbergHealth, testGotenbergConvertSample, downloadTestPdfBlob, openPdfPreview, DEFAULT_GOTENBERG_URL } from '../utils/gotenbergTest';
 import { checkSystemHealth } from '../utils/systemHealth';
-import { sendTelegramAlert, testTelegramBotConnection, formatBookingStatusTelegramMessage } from '../utils/telegram';
+import { sendTelegramAlert, testTelegramBotConnection, formatBookingStatusTelegramMessage, formatBookingDeletedTelegramMessage } from '../utils/telegram';
 import { sortCategories } from '../utils/categories';
 import BookingDetailModal from '../components/BookingDetailModal';
 import ManualBookingModal from '../components/ManualBookingModal';
@@ -748,6 +748,23 @@ export default function Admin() {
       }
       logActivity(`Hapus permanen booking ${bookingId || key}`, currentUser?.email);
       toast.success(`Booking ${bookingId || key} berhasil dihapus permanen.`, "Booking Dihapus");
+
+      // Telegram Broadcast notification if enabled
+      if (telegramEnabled && telegramChatId) {
+        try {
+          const tgMsg = formatBookingDeletedTelegramMessage({
+            booking: targetBooking || { id: bookingId || key },
+            adminEmail: currentUser?.email
+          });
+          sendTelegramAlert({
+            text: tgMsg,
+            chatId: telegramChatId,
+            botToken: telegramBotToken
+          }).catch(err => console.warn("Background Telegram delete alert warning:", err));
+        } catch (tgErr) {
+          console.warn("Telegram delete dispatch error:", tgErr);
+        }
+      }
     } catch (e) {
       toast.error("Gagal menghapus: " + e.message, "Gagal Menghapus");
     }
@@ -3544,6 +3561,12 @@ export default function Admin() {
         onClose={() => setShowManualBookingModal(false)}
         inventory={inventory}
         currentUser={currentUser}
+        telegramConfig={{
+          enabled: telegramEnabled,
+          chatId: telegramChatId,
+          botToken: telegramBotToken
+        }}
+        onBookingCreated={() => fetchAll()}
       />
     </div>
   );
