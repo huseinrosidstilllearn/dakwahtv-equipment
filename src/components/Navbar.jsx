@@ -26,9 +26,12 @@ export default function Navbar({ theme, setTheme, cartCount, openCart, openIssue
       const { data } = await supabase.from('config').select('value').eq('key', 'adminWaNumbers').maybeSingle();
       const val = data?.value;
       if (val && Array.isArray(val) && val.length > 0) {
-        setAdminWaNumber(val[0].replace(/[^0-9]/g, ''));
+        const personal = val.find(v => !String(v).includes('@g.us')) || val[0];
+        setAdminWaNumber(String(personal).replace(/[^0-9]/g, ''));
       } else if (val && typeof val === 'string') {
-        setAdminWaNumber(val.replace(/[^0-9]/g, ''));
+        if (!val.includes('@g.us')) {
+          setAdminWaNumber(val.replace(/[^0-9]/g, ''));
+        }
       }
     };
     fetchWa();

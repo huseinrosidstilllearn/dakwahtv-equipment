@@ -2944,30 +2944,124 @@ export default function Admin() {
 
       {showWaModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowWaModal(false)}>
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-6">Nomor WhatsApp Admin</h3>
-            <div className="space-y-2 mb-6 max-h-[40vh] overflow-y-auto pr-2 scrollbar-none">
-              {waNumbers.map((num, i) => (
-                <div key={i} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl">
-                  <span className="font-mono text-sm">{num}</span>
-                  <button onClick={() => {
-                    const newNums = [...waNumbers];
-                    newNums.splice(i, 1);
-                    setWaNumbers(newNums);
-                  }} className="text-destructive/50 hover:text-destructive transition-colors"><Trash2 className="w-4 h-4"/></button>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <Phone className="w-5 h-5" />
                 </div>
-              ))}
-              {waNumbers.length === 0 && <p className="text-sm text-foreground/50 text-center py-4 border border-dashed border-border rounded-xl">Belum ada nomor WA</p>}
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Nomor & Grup WhatsApp Admin</h3>
+                  <p className="text-[11px] text-foreground/60">Broadcast alert pengajuan booking baru ke admin atau grup kru</p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowWaModal(false)}
+                className="p-1.5 hover:bg-muted rounded-xl text-foreground/60 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-4 max-h-[35vh] overflow-y-auto pr-1">
+              {waNumbers.map((num, i) => {
+                const isGroup = String(num).includes('@g.us');
+                return (
+                  <div key={i} className="flex justify-between items-center p-3 bg-muted/30 border border-border rounded-xl">
+                    <div className="flex items-center gap-2">
+                      {isGroup ? (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                          <Users className="w-3 h-3" /> GRUP WA
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> PERSONAL
+                        </span>
+                      )}
+                      <span className="font-mono text-xs font-semibold">{num}</span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newNums = [...waNumbers];
+                        newNums.splice(i, 1);
+                        setWaNumbers(newNums);
+                      }} 
+                      className="p-1.5 text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus"
+                    >
+                      <Trash2 className="w-4 h-4"/>
+                    </button>
+                  </div>
+                );
+              })}
+              {waNumbers.length === 0 && (
+                <p className="text-xs text-foreground/50 text-center py-6 border border-dashed border-border rounded-xl">
+                  Belum ada nomor atau grup WhatsApp yang terdaftar
+                </p>
+              )}
             </div>
             
-            <div className="flex gap-2 mb-6">
-              <input type="text" value={newWaNumber} onChange={e => setNewWaNumber(e.target.value)} placeholder="08123456789" className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newWaNumber) { setWaNumbers([...waNumbers, newWaNumber]); setNewWaNumber(''); } } }} />
-              <button onClick={() => { if (newWaNumber) { setWaNumbers([...waNumbers, newWaNumber]); setNewWaNumber(''); } }} className="px-4 py-2 bg-primary/10 text-primary font-bold rounded-xl text-sm hover:bg-primary hover:text-primary-foreground transition-colors"><Plus className="w-5 h-5"/></button>
+            <div className="flex gap-2 mb-4">
+              <input 
+                type="text" 
+                value={newWaNumber} 
+                onChange={e => setNewWaNumber(e.target.value)} 
+                placeholder="Nomor (0812...) atau ID Grup (...@g.us)" 
+                className="flex-1 bg-muted/40 border border-border rounded-xl px-3.5 py-2 text-xs focus:border-primary outline-none font-mono" 
+                onKeyDown={e => { 
+                  if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    if (newWaNumber.trim()) { 
+                      setWaNumbers([...waNumbers, newWaNumber.trim()]); 
+                      setNewWaNumber(''); 
+                    } 
+                  } 
+                }} 
+              />
+              <button 
+                type="button"
+                onClick={() => { 
+                  if (newWaNumber.trim()) { 
+                    setWaNumbers([...waNumbers, newWaNumber.trim()]); 
+                    setNewWaNumber(''); 
+                  } 
+                }} 
+                className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
+              >
+                <Plus className="w-4 h-4"/> Tambah
+              </button>
+            </div>
+
+            {/* Panduan ID Grup Fonnte */}
+            <div className="p-3 bg-muted/40 border border-border rounded-xl mb-4">
+              <div className="text-[11px] font-bold text-foreground mb-1 flex items-center gap-1">
+                👥 Cara Kirim ke Grup WhatsApp:
+              </div>
+              <ol className="list-decimal list-inside space-y-1 text-[10px] text-foreground/70 leading-relaxed">
+                <li>Pastikan nomor WhatsApp bot sudah <b>diundang / join</b> ke grup WhatsApp yang dituju.</li>
+                <li>Buka dashboard <b>fonnte.com</b> &rarr; buka menu <b>Device / Group</b> &rarr; klik <b>Fetch Group</b>.</li>
+                <li>Salin <b>Group ID</b> grup tersebut (formatnya berakhiran <code>@g.us</code>, misalnya: <code>120363023456789012@g.us</code>).</li>
+                <li>Tempelkan Group ID di atas lalu klik <b>Tambah</b> & <b>Simpan Perubahan</b>.</li>
+              </ol>
             </div>
             
-            <div className="flex gap-3 justify-end pt-4 border-t border-border">
-              <button className="px-5 py-2.5 font-bold text-sm text-foreground/70 hover:text-foreground transition-colors" onClick={() => setShowWaModal(false)}>Batal</button>
-              <button className="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:bg-primary/90 transition-colors" onClick={saveWaNumbers}>Simpan Perubahan</button>
+            <div className="flex gap-2 justify-end pt-3 border-t border-border">
+              <button 
+                type="button"
+                className="px-4 py-2 font-bold text-xs text-foreground/70 hover:text-foreground transition-colors cursor-pointer" 
+                onClick={() => setShowWaModal(false)}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 transition-colors cursor-pointer shadow-sm" 
+                onClick={saveWaNumbers}
+              >
+                Simpan Perubahan
+              </button>
             </div>
           </div>
         </div>

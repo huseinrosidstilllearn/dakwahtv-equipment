@@ -367,10 +367,15 @@ export default function Katalog() {
       let adminWaList = [];
       if (waData?.value) {
         const val = waData.value;
+        const cleanTarget = (v) => {
+          const s = String(v || '').trim();
+          if (s.includes('@g.us')) return s;
+          return s.replace(/[^0-9]/g, '');
+        };
         if (Array.isArray(val)) {
-          adminWaList = val.map(v => v.replace(/[^0-9]/g, '')).filter(Boolean);
+          adminWaList = val.map(cleanTarget).filter(Boolean);
         } else if (typeof val === 'string') {
-          adminWaList = [val.replace(/[^0-9]/g, '')].filter(Boolean);
+          adminWaList = [cleanTarget(val)].filter(Boolean);
         }
       }
 
