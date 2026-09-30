@@ -10,7 +10,7 @@ import {
   Shield, LogOut, Sun, Moon, Calendar, Download, Megaphone, 
   Settings, Phone, CheckCircle2, AlertTriangle, AlertCircle, Search, Plus, X, Check, ArrowRightLeft,
   LayoutDashboard, CalendarCheck, CheckSquare, Camera, PackageSearch, Users, Wrench, FileSearch, BarChart2, History, Menu, Edit, Trash2, MapPin, FileText,
-  RefreshCw, Sparkles, ExternalLink, Activity, Bot, Send, Radio
+  RefreshCw, Sparkles, ExternalLink, Activity, Bot, Send, Radio, TrendingUp, Clock, Award, Flame
 } from 'lucide-react';
 import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '../utils/whatsapp';
 import { renderAndUploadSpaPdfDirect } from '../utils/spaPdf';
@@ -1842,167 +1842,484 @@ export default function Admin() {
   };
 
   const renderStats = () => {
-    // Booking stats
-    const statusGroups = [
-      { label: 'Pending', count: bookings.filter(b => b.status === 'pending').length, color: '#eab308' },
-      { label: 'Disetujui', count: bookings.filter(b => b.status === 'approved' || b.status === 'letter_ready').length, color: '#06b6d4' },
-      { label: 'Dipinjam', count: bookings.filter(b => b.status === 'picked_up' || b.status === 'active').length, color: '#3b82f6' },
-      { label: 'Selesai', count: bookings.filter(b => b.status === 'returned' || b.status === 'returned_late').length, color: '#22c55e' },
-      { label: 'Ditolak/Exp', count: bookings.filter(b => b.status === 'rejected' || b.status === 'expired').length, color: '#ef4444' },
-    ];
+    // Total Bookings & Status breakdown
     const totalBookings = bookings.length;
+    const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+    const approvedBookings = bookings.filter(b => b.status === 'approved' || b.status === 'letter_ready').length;
+    const activeBorrowings = bookings.filter(b => b.status === 'active' || b.status === 'picked_up').length;
+    const finishedBookings = bookings.filter(b => b.status === 'returned' || b.status === 'returned_late').length;
+    const lateBookings = bookings.filter(b => b.status === 'returned_late').length;
+    const rejectedBookings = bookings.filter(b => b.status === 'rejected' || b.status === 'expired').length;
+
+    // Rates
+    const onTimeRate = finishedBookings > 0 
+      ? Math.round(((finishedBookings - lateBookings) / finishedBookings) * 100) 
+      : 100;
 
     // Inventory stats
+    const invTotal = inventory.length;
     const invReady = inventory.filter(i => !i.status || i.status === 'ready').length;
     const invAttn = inventory.filter(i => i.status === 'attention').length;
     const invUnavail = inventory.filter(i => i.status === 'unavailable').length;
-    const invTotal = inventory.length;
-    const invGroups = [
-      { label: 'Ready', count: invReady, color: '#22c55e' },
-      { label: 'Maintenance', count: invAttn, color: '#eab308' },
-      { label: 'Not Ready', count: invUnavail, color: '#ef4444' },
+    const readyRate = invTotal > 0 ? Math.round((invReady / invTotal) * 100) : 100;
+
+    // Donut groups
+    const bookingStatusGroups = [
+      { label: 'Selesai Tepat Waktu', count: finishedBookings - lateBookings, color: '#10b981' },
+      { label: 'Sedang Dipinjam', count: activeBorrowings, color: '#3b82f6' },
+      { label: 'Disetujui / Siap', count: approvedBookings, color: '#06b6d4' },
+      { label: 'Menunggu Approval', count: pendingBookings, color: '#f59e0b' },
+      { label: 'Kembali Terlambat', count: lateBookings, color: '#f43f5e' },
+      { label: 'Ditolak / Expired', count: rejectedBookings, color: '#64748b' },
     ];
 
-    // Top borrowed items
+    const invGroups = [
+      { label: 'Siap Digunakan (Ready)', count: invReady, color: '#10b981' },
+      { label: 'Perlu Perawatan / Servis', count: invAttn, color: '#f59e0b' },
+      { label: 'Tidak Tersedia (Rusak/Hilang)', count: invUnavail, color: '#f43f5e' },
+    ];
+
+    // Item & Category popularity calculation
+    const itemCatMap = {};
+    inventory.forEach(inv => {
+      if (inv.name) {
+        itemCatMap[inv.name.toLowerCase().trim()] = inv.cat || 'Lainnya';
+      }
+    });
+
     const itemCount = {};
+    const catBorrowCount = {};
+    let totalItemsBorrowed = 0;
+
     bookings.forEach(b => {
       const items = Array.isArray(b.items) ? b.items : Object.values(b.items || {});
       items.forEach(it => {
-        const name = it.name || it;
+        const name = (typeof it === 'object' && it ? it.name : it) || 'Alat';
+        const cat = (typeof it === 'object' && it && it.cat) ? it.cat : (itemCatMap[name.toLowerCase().trim()] || 'Lainnya');
         itemCount[name] = (itemCount[name] || 0) + 1;
+        catBorrowCount[cat] = (catBorrowCount[cat] || 0) + 1;
+        totalItemsBorrowed += 1;
       });
     });
-    const topItems = Object.entries(itemCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
-    const maxCount = topItems.length > 0 ? topItems[0][1] : 1;
 
-    // Donut chart SVG helper
-    const DonutChart = ({ data, size = 140 }) => {
-      const total = data.reduce((s, d) => s + d.count, 0) || 1;
-      let cum = 0;
-      const r = 50; const cx = 70; const cy = 70;
-      const segments = data.map(d => {
-        const pct = d.count / total;
-        const start = cum;
-        cum += pct;
-        const startAngle = start * 2 * Math.PI - Math.PI / 2;
-        const endAngle = cum * 2 * Math.PI - Math.PI / 2;
-        const x1 = cx + r * Math.cos(startAngle);
-        const y1 = cy + r * Math.sin(startAngle);
-        const x2 = cx + r * Math.cos(endAngle);
-        const y2 = cy + r * Math.sin(endAngle);
-        const large = pct > 0.5 ? 1 : 0;
-        return { ...d, path: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`, pct };
-      });
+    const topItems = Object.entries(itemCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const maxItemCount = topItems.length > 0 ? topItems[0][1] : 1;
+
+    const topCategories = Object.entries(catBorrowCount).sort((a, b) => b[1] - a[1]);
+    const maxCatCount = topCategories.length > 0 ? topCategories[0][1] : 1;
+
+    // SVG Donut Chart helper
+    const DonutChart = ({ data, size = 150, centerLabel = "TOTAL" }) => {
+      const total = data.reduce((s, d) => s + (d.count || 0), 0);
+      const r = 46;
+      const cx = 70;
+      const cy = 70;
+      const strokeWidth = 14;
+      const c = 2 * Math.PI * r;
+
+      let accumulated = 0;
+      const validData = data.filter(d => (d.count || 0) > 0);
+
       return (
-        <svg width={size} height={size} viewBox="0 0 140 140">
-          {segments.filter(s => s.count > 0).map((s, i) => (
-            <path key={i} d={s.path} fill={s.color} opacity={0.85} />
-          ))}
-          <circle cx={cx} cy={cy} r={28} fill="var(--card)" />
-          <text x={cx} y={cy - 4} textAnchor="middle" fontSize="12" fontWeight="bold" fill="var(--foreground)">{total}</text>
-          <text x={cx} y={cy + 12} textAnchor="middle" fontSize="7" fill="var(--foreground)" opacity="0.5">TOTAL</text>
-        </svg>
+        <div className="relative inline-flex items-center justify-center flex-shrink-0">
+          <svg width={size} height={size} viewBox="0 0 140 140" className="rotate-[-90deg] transform">
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r}
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              className="text-muted/40"
+              fill="none"
+            />
+            {total > 0 && validData.map((d, idx) => {
+              const pct = d.count / total;
+              const strokeDasharray = `${pct * c} ${c}`;
+              const strokeDashoffset = -accumulated * c;
+              accumulated += pct;
+              return (
+                <circle
+                  key={idx}
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  stroke={d.color}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                  fill="none"
+                  className="transition-all duration-700 ease-out"
+                />
+              );
+            })}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <span className="text-xl font-black font-heading tracking-tight text-foreground leading-none">
+              {total}
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-1">
+              {centerLabel}
+            </span>
+          </div>
+        </div>
       );
+    };
+
+    const getRankBadge = (index) => {
+      if (index === 0) return { icon: '🥇', label: '1st', bg: 'bg-amber-500/20 text-amber-500 border-amber-500/40' };
+      if (index === 1) return { icon: '🥈', label: '2nd', bg: 'bg-slate-400/20 text-slate-300 border-slate-400/40' };
+      if (index === 2) return { icon: '🥉', label: '3rd', bg: 'bg-amber-700/20 text-amber-600 border-amber-700/40' };
+      return { icon: `#${index + 1}`, label: `#${index + 1}`, bg: 'bg-muted text-muted-foreground border-border' };
     };
 
     return (
       <div className={`space-y-8 ${activePanel === 'stats' ? 'block' : 'hidden'}`}>
-        <h2 className="text-2xl font-black font-heading uppercase tracking-tight">Statistik Sistem</h2>
+        {/* Header Title & Live Badge */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Live Intelligence
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {bookings.length} Aktivitas Terekam
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-foreground flex items-center gap-2">
+              <BarChart2 className="w-7 h-7 text-primary" />
+              Statistik & Analisis Performa
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Tinjauan holistik sirkulasi peminjaman, keandalan armada inventaris, dan tren penggunaan peralatan.
+            </p>
+          </div>
+        </div>
 
-        {/* Row 1: Two donuts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Booking Donut */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/60 mb-4">Status Booking</h3>
-            <div className="flex items-center gap-6">
-              <DonutChart data={statusGroups} />
-              <div className="space-y-2 flex-1">
-                {statusGroups.map(s => (
-                  <div key={s.label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                      <span className="text-xs font-medium text-foreground/70">{s.label}</span>
+        {/* 4 Hero KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Total Sirkulasi */}
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/40 group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Sirkulasi</span>
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black font-heading text-foreground">{totalBookings}</span>
+              <span className="text-xs font-semibold text-muted-foreground">Booking</span>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-500 font-bold text-[11px]">
+                <Flame className="w-3 h-3" /> {activeBorrowings} Aktif
+              </span>
+              <span>sedang dipinjam kru</span>
+            </div>
+          </div>
+
+          {/* Card 2: Kesiapan Armada */}
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-emerald-500/40 group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Kesiapan Armada</span>
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                <Camera className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black font-heading text-emerald-500">{readyRate}%</span>
+              <span className="text-xs font-semibold text-muted-foreground">Siap Pakai</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{invReady} dari {invTotal} unit</span>
+              {invAttn > 0 && (
+                <span className="text-amber-500 font-bold">{invAttn} butuh servis</span>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Ketepatan Waktu */}
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-blue-500/40 group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">On-Time Return</span>
+              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <Clock className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black font-heading text-foreground">{onTimeRate}%</span>
+              <span className="text-xs font-semibold text-muted-foreground">Disiplin</span>
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+              {lateBookings > 0 ? (
+                <span className="text-destructive font-bold inline-flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> {lateBookings} insiden terlambat
+                </span>
+              ) : (
+                <span className="text-emerald-500 font-bold inline-flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> 100% Tepat Waktu
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Card 4: Ekosistem Kru */}
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-purple-500/40 group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Kru Terdaftar</span>
+              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black font-heading text-foreground">{usersList.length}</span>
+              <span className="text-xs font-semibold text-muted-foreground">Personel</span>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground/80">{finishedBookings}</span>
+              <span>total pengembalian sukses</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 1: Dual Donut Analytics Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Booking Status Breakdown */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Alur Sirkulasi Booking</h3>
+                <p className="text-xs text-foreground/70 mt-0.5">Distribusi status dari total permohonan</p>
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-1 rounded bg-muted text-muted-foreground">
+                {totalBookings} Total
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <DonutChart data={bookingStatusGroups} size={150} centerLabel="BOOKING" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 flex-1 w-full">
+                {bookingStatusGroups.map(s => {
+                  const pct = totalBookings > 0 ? Math.round((s.count / totalBookings) * 100) : 0;
+                  return (
+                    <div key={s.label} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/40">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
+                        <span className="text-xs font-medium text-foreground truncate">{s.label}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 flex-shrink-0 ml-2">
+                        <span className="text-xs font-black" style={{ color: s.color }}>{s.count}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">({pct}%)</span>
+                      </div>
                     </div>
-                    <span className="text-xs font-black" style={{ color: s.color }}>{s.count}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Inventory Donut */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/60 mb-4">Kondisi Inventaris ({invTotal} unit)</h3>
-            <div className="flex items-center gap-6">
-              <DonutChart data={invGroups} size={140} />
-              <div className="space-y-2 flex-1">
-                {invGroups.map(s => (
-                  <div key={s.label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                      <span className="text-xs font-medium text-foreground/70">{s.label}</span>
+          {/* Inventory Health & Availability */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Kesehatan & Ketersediaan Alat</h3>
+                <p className="text-xs text-foreground/70 mt-0.5">Kondisi operasional unit inventaris armada</p>
+              </div>
+              <span className="text-xs font-mono font-bold px-2 py-1 rounded bg-muted text-muted-foreground">
+                {invTotal} Unit
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <DonutChart data={invGroups} size={150} centerLabel="UNIT ALAT" />
+              <div className="space-y-3 flex-1 w-full">
+                {invGroups.map(s => {
+                  const pct = invTotal > 0 ? Math.round((s.count / invTotal) * 100) : 0;
+                  return (
+                    <div key={s.label} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+                          <span className="font-medium text-foreground">{s.label}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-black" style={{ color: s.color }}>{s.count} Unit</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">({pct}%)</span>
+                        </div>
+                      </div>
+                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: s.color }}
+                        />
+                      </div>
                     </div>
-                    <span className="text-xs font-black" style={{ color: s.color }}>{s.count}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Row 2: Top borrowed bar chart */}
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/60 mb-5">Alat Paling Sering Dipinjam</h3>
-          {topItems.length === 0 ? (
-            <p className="text-foreground/40 text-sm font-mono text-center py-6">Belum ada data peminjaman.</p>
-          ) : (
-            <div className="space-y-3">
-              {topItems.map(([name, count], i) => (
-                <div key={name} className="flex items-center gap-3">
-                  <span className="text-[10px] font-mono text-foreground/40 w-4 text-right">{i+1}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-medium text-foreground truncate pr-2">{name}</span>
-                      <span className="text-xs font-black text-primary flex-shrink-0">{count}×</span>
+        {/* Row 2: Top 10 Leaderboard & Category Borrow Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top 10 Leaderboard */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">Top 10 Alat Terfavorit</h3>
+                    <p className="text-xs text-muted-foreground">Paling sering diajukan dalam sirkulasi peminjaman</p>
+                  </div>
+                </div>
+              </div>
+
+              {topItems.length === 0 ? (
+                <p className="text-muted-foreground text-xs font-mono text-center py-10">Belum ada data peminjaman terekam.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {topItems.map(([name, count], i) => {
+                    const rank = getRankBadge(i);
+                    const cat = itemCatMap[name.toLowerCase().trim()] || 'Alat';
+                    const pct = Math.round((count / maxItemCount) * 100);
+                    return (
+                      <div key={name} className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors border border-border/40">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className={`w-6 h-6 flex-shrink-0 rounded-lg flex items-center justify-center text-xs font-black border ${rank.bg}`}>
+                              {rank.icon}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-foreground truncate">{name}</h4>
+                              <span className="text-[10px] text-muted-foreground font-medium">{cat}</span>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <span className="text-xs font-black font-mono text-primary">{count}×</span>
+                            <span className="text-[10px] text-muted-foreground ml-1">pinjam</span>
+                          </div>
+                        </div>
+                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Category Borrow Distribution */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                    <BarChart2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-foreground">Distribusi Kategori Pinjaman</h3>
+                    <p className="text-xs text-muted-foreground">Kategori peralatan yang paling tinggi permintaannya</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-muted-foreground">
+                  {totalItemsBorrowed} Total Item
+                </span>
+              </div>
+
+              {topCategories.length === 0 ? (
+                <p className="text-muted-foreground text-xs font-mono text-center py-10">Belum ada data kategori pinjaman.</p>
+              ) : (
+                <div className="space-y-3.5 pt-2">
+                  {topCategories.map(([cat, count]) => {
+                    const sharePct = totalItemsBorrowed > 0 ? Math.round((count / totalItemsBorrowed) * 100) : 0;
+                    const barPct = Math.round((count / maxCatCount) * 100);
+                    return (
+                      <div key={cat} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-semibold text-foreground flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            {cat}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-foreground">{count} unit</span>
+                            <span className="text-[11px] font-mono text-muted-foreground">({sharePct}%)</span>
+                          </div>
+                        </div>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-500 transition-all duration-700"
+                            style={{ width: `${barPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: SaaS Executive Metrics Matrix */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-6 border-b border-border/60">
+            <div>
+              <h3 className="font-bold text-base font-heading text-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Matriks & Integritas Operasional Sistem
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Rangkuman parameter kunci performa peminjaman dan kesehatan aset Dakwah TV.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-border">
+              8 Parameter Kunci
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Booking', val: totalBookings, sub: 'Semua riwayat sirkulasi', icon: CalendarCheck, color: 'text-foreground' },
+              { label: 'Booking Sukses Selesai', val: finishedBookings - lateBookings, sub: 'Pengembalian tepat waktu', icon: CheckCircle2, color: 'text-emerald-500' },
+              { label: 'Insiden Terlambat', val: lateBookings, sub: 'Melewati batas tempo', icon: AlertTriangle, color: lateBookings > 0 ? 'text-destructive' : 'text-muted-foreground' },
+              { label: 'Armada Aktif', val: activeBorrowings, sub: 'Sedang dipegang kru', icon: Flame, color: 'text-blue-500' },
+              { label: 'Total Inventaris', val: `${invTotal} Unit`, sub: 'Katalog terdata', icon: PackageSearch, color: 'text-foreground' },
+              { label: 'Alat Siap Pakai', val: `${invReady} Unit`, sub: `${readyRate}% tingkat kesiapan`, icon: Check, color: 'text-emerald-500' },
+              { label: 'Butuh Perbaikan', val: `${invAttn} Unit`, sub: 'Dalam perawatan', icon: Wrench, color: invAttn > 0 ? 'text-amber-500' : 'text-muted-foreground' },
+              { label: 'Total Personel Kru', val: `${usersList.length} Akun`, sub: 'Pengguna terdaftar', icon: Users, color: 'text-purple-500' },
+            ].map((metric, i) => {
+              const IconComp = metric.icon;
+              return (
+                <div key={i} className="p-4 rounded-xl border border-border/60 bg-muted/20 hover:bg-muted/40 transition-all flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{metric.label}</span>
+                    <IconComp className={`w-4 h-4 ${metric.color}`} />
+                  </div>
+                  <div>
+                    <div className={`text-2xl font-black font-heading ${metric.color}`}>
+                      {metric.val}
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${(count/maxCount)*100}%`, background: `hsl(${175 - i*15}, 60%, 45%)` }}
-                      />
+                    <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                      {metric.sub}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Row 3: Summary table */}
-        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-border">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-foreground/60">Ringkasan Sistem</h3>
+              );
+            })}
           </div>
-          <table className="w-full text-sm">
-            <tbody>
-              {[
-                { label: 'Total Booking', value: totalBookings, color: 'text-foreground' },
-                { label: 'Booking Selesai', value: bookings.filter(b=>b.status==='returned'||b.status==='returned_late').length, color: 'text-green-500' },
-                { label: 'Booking Terlambat', value: bookings.filter(b=>b.status==='returned_late').length, color: 'text-destructive' },
-                { label: 'Total Inventaris', value: invTotal, color: 'text-foreground' },
-                { label: 'Alat Siap Pakai', value: invReady, color: 'text-green-500' },
-                { label: 'Alat Perlu Perhatian', value: invAttn, color: 'text-yellow-500' },
-                { label: 'Total Pengguna', value: usersList.length, color: 'text-foreground' },
-                { label: 'Log Servis Aktif', value: serviceLogs.filter(l=>l.status?.includes('Sedang')).length, color: 'text-yellow-500' },
-                { label: 'Total Log Aktivitas', value: activityLogs.length, color: 'text-foreground' },
-              ].map((row, i) => (
-                <tr key={row.label} className={`${i % 2 === 0 ? 'bg-muted/10' : ''} border-b border-border/50 last:border-0`}>
-                  <td className="px-5 py-3 font-medium text-foreground/70 text-sm">{row.label}</td>
-                  <td className={`px-5 py-3 font-black text-right ${row.color}`}>{row.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     );
