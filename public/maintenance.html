@@ -322,7 +322,7 @@
       background: rgba(0, 0, 0, 0.18);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 12px 16px;
+      padding: 12px 18px;
       margin-bottom: 24px;
       display: flex;
       align-items: center;
@@ -330,6 +330,9 @@
       gap: 12px;
       font-size: 12px;
       font-family: 'JetBrains Mono', monospace;
+    }
+    [data-theme="light"] .sync-tracker {
+      background: rgba(0, 0, 0, 0.04);
     }
     .sync-info {
       display: flex;
@@ -344,6 +347,7 @@
       height: 15px;
       color: var(--primary);
       animation: spinSlow 3s linear infinite;
+      flex-shrink: 0;
     }
     @keyframes spinSlow {
       from { transform: rotate(0deg); }
@@ -354,6 +358,13 @@
       color: var(--primary);
       font-size: 11px;
       white-space: nowrap;
+      background: rgba(38, 166, 154, 0.1);
+      border: 1px solid rgba(38, 166, 154, 0.25);
+      border-radius: 999px;
+      padding: 3px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Resolved State Banner */
@@ -438,11 +449,22 @@
       }
       .sync-tracker {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 8px;
+        padding: 12px 14px;
+      }
+      .sync-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+        line-height: 1.4;
       }
       .sync-timer {
-        align-self: flex-end;
+        align-self: center;
       }
     }
   </style>
