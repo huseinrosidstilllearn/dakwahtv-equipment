@@ -10,7 +10,7 @@ import {
   Shield, LogOut, Sun, Moon, Calendar, Download, Megaphone, 
   Settings, Phone, CheckCircle2, AlertTriangle, AlertCircle, Search, Plus, X, Check, ArrowRightLeft,
   LayoutDashboard, CalendarCheck, CheckSquare, Camera, PackageSearch, Users, Wrench, FileSearch, BarChart2, History, Menu, Edit, Trash2, MapPin, FileText,
-  RefreshCw, Sparkles, ExternalLink, Activity, Bot, Send, Radio, TrendingUp, Clock, Award, Flame
+  RefreshCw, Sparkles, ExternalLink, Activity, Bot, Send, Radio, TrendingUp, Clock, Award, Flame, QrCode, ScanLine
 } from 'lucide-react';
 import { sendWhatsAppMessage, DEFAULT_WA_TEMPLATES, sanitizeWaTemplate } from '../utils/whatsapp';
 import { renderAndUploadSpaPdfDirect } from '../utils/spaPdf';
@@ -20,6 +20,8 @@ import { sendTelegramAlert, testTelegramBotConnection, formatBookingStatusTelegr
 import { sortCategories } from '../utils/categories';
 import BookingDetailModal from '../components/BookingDetailModal';
 import ManualBookingModal from '../components/ManualBookingModal';
+import QrCodeModal from '../components/QrCodeModal';
+import QrScannerModal from '../components/QrScannerModal';
 import { ShinyButton } from '../components/ui/shiny-button';
 import { useToast } from '../context/ToastContext';
 import { getSavedTheme, applyTheme } from '../utils/theme';
@@ -383,6 +385,11 @@ export default function Admin() {
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [healthData, setHealthData] = useState(null);
+
+  // QR Code Asset Management & Scanner States
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedQrItem, setSelectedQrItem] = useState(null);
+  const [showScannerModal, setShowScannerModal] = useState(false);
 
   // WA Templates Modal States
   const [showWaTemplateModal, setShowWaTemplateModal] = useState(false);
@@ -1580,6 +1587,100 @@ export default function Admin() {
           </div>
         </div>
 
+        {/* Bento Operational Hub: QR Scanner & System Watchdog */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* QR Asset Scanner Card */}
+          <div className="bg-gradient-to-br from-teal-500/10 via-card to-card border border-teal-500/30 p-4 rounded-2xl shadow-sm flex flex-col justify-between gap-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal flex items-center justify-center font-bold">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Pemindai QR Code Studio</h4>
+                  <p className="text-[11px] text-foreground/60">Check-in & check-out alat fisik langsung via kamera HP</p>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal/15 text-teal border border-teal/20 uppercase tracking-wider font-mono">
+                CAMERA READY
+              </span>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowScannerModal(true)}
+                className="flex-1 py-2 bg-teal hover:bg-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <Camera className="w-3.5 h-3.5" /> Buka Kamera Pemindai QR
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (inventory.length > 0) {
+                    setSelectedQrItem(inventory[0]);
+                    setShowQrModal(true);
+                  }
+                }}
+                className="px-3 py-2 bg-background hover:bg-muted border border-border rounded-xl text-xs font-bold text-foreground transition-all flex items-center gap-1.5"
+                title="Pratinjau Format Label Stiker"
+              >
+                <QrCode className="w-3.5 h-3.5 text-foreground/70" /> Contoh Label
+              </button>
+            </div>
+          </div>
+
+          {/* System Health Watchdog Card */}
+          <div className="bg-gradient-to-br from-emerald-500/10 via-card to-card border border-emerald-500/30 p-4 rounded-2xl shadow-sm flex flex-col justify-between gap-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    System Health Watchdog
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  </h4>
+                  <p className="text-[11px] text-foreground/60">
+                    {healthData?.services 
+                      ? `${healthData.services.filter(s => s.status === 'up').length}/${healthData.services.length} Layanan Beroperasi Normal`
+                      : 'Memantau Supabase, Gotenberg, R2, WA, & Telegram'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={refreshHealthWatchdog}
+                disabled={isCheckingHealth}
+                className="p-1.5 hover:bg-muted rounded-lg text-foreground/60 transition-colors"
+                title="Ping Layanan Sekarang"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingHealth ? 'animate-spin text-teal' : ''}`} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => { setShowHealthModal(true); refreshHealthWatchdog(); }}
+                className="flex-1 py-2 bg-background hover:bg-muted border border-border rounded-xl text-xs font-bold text-foreground transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                Detail Status & Latensi Server
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowTelegramModal(true)}
+                className={`px-3 py-2 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  telegramEnabled ? 'bg-sky-500/10 text-sky-500 border-sky-500/30' : 'bg-background text-foreground/60 border-border hover:bg-muted'
+                }`}
+                title="Pengaturan Bot Telegram"
+              >
+                <Bot className="w-3.5 h-3.5" /> Telegram {telegramEnabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-card border border-border p-5 sm:p-6 rounded-2xl shadow-sm space-y-6">
             <h3 className="text-xl font-bold uppercase tracking-wide">Booking Terbaru</h3>
             <div className="space-y-4">
@@ -1733,6 +1834,13 @@ export default function Admin() {
                     return (
                     <div key={it.id || it.name} className="group relative flex flex-col bg-card rounded-xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-glow border border-border hover:border-teal/50">
                       <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button 
+                          className="bg-teal text-white rounded-md p-1.5 hover:bg-teal-600 shadow" 
+                          onClick={() => { setSelectedQrItem(it); setShowQrModal(true); }} 
+                          title="Cetak Stiker Label QR"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </button>
                         <button className="bg-blue-500 text-white rounded-md p-1.5 hover:bg-blue-600 shadow" onClick={() => setEditingInv({ ...it, keterangan: it.notes || it.keterangan || it.desc || "" })} title="Edit Alat">
                           <Edit className="w-4 h-4" />
                         </button>
@@ -1764,11 +1872,21 @@ export default function Admin() {
                         
                         <div className="flex-1"></div>
 
-                        {/* Status Toggle & Indicator */}
-                        <button className="flex items-center gap-2 mt-auto w-full text-left" onClick={() => handleToggleInventoryStatus(it.id || it.name, it.status)} title="Klik untuk ubah status">
-                           <div className={`w-2 h-2 rounded-full ${statusColor}`}></div>
-                           <span className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase text-foreground/70 hover:text-foreground transition-colors">{it.status === 'attention' ? 'Maintenance' : it.status === 'unavailable' ? 'Not Ready' : 'Ready'}</span>
-                        </button>
+                        {/* Status Toggle & Indicator & QR Button */}
+                        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/40 w-full">
+                          <button className="flex items-center gap-2 text-left" onClick={() => handleToggleInventoryStatus(it.id || it.name, it.status)} title="Klik untuk ubah status">
+                             <div className={`w-2 h-2 rounded-full ${statusColor}`}></div>
+                             <span className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase text-foreground/70 hover:text-foreground transition-colors">{it.status === 'attention' ? 'Maintenance' : it.status === 'unavailable' ? 'Not Ready' : 'Ready'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedQrItem(it); setShowQrModal(true); }}
+                            className="p-1 text-foreground/40 hover:text-teal transition-colors"
+                            title="Cetak Label QR Code Aset"
+                          >
+                            <QrCode className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )})}
@@ -2941,6 +3059,13 @@ export default function Admin() {
           <button className="px-3 py-1.5 bg-background text-foreground hover:bg-accent border border-border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5" onClick={() => setShowWaTemplateModal(true)}>
             <Edit className="w-3.5 h-3.5" /> Template WA
           </button>
+          <button 
+            className="px-3 py-1.5 bg-teal/10 hover:bg-teal/20 text-teal border border-teal/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            onClick={() => setShowScannerModal(true)}
+            title="Scan QR Code Alat Kamera HP (Check-In / Check-Out Kilat)"
+          >
+            <Camera className="w-3.5 h-3.5 text-teal" /> Scan QR Alat
+          </button>
           <button className="px-3 py-1.5 bg-background text-foreground hover:bg-accent border border-border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5" onClick={() => setShowGotenbergModal(true)}>
             <FileText className="w-3.5 h-3.5 text-teal" /> Gotenberg PDF
           </button>
@@ -4006,6 +4131,31 @@ export default function Admin() {
           botToken: telegramBotToken
         }}
         onBookingCreated={() => fetchAll()}
+      />
+
+      {/* QR Code Label Modal */}
+      <QrCodeModal 
+        item={selectedQrItem}
+        isOpen={showQrModal}
+        onClose={() => {
+          setShowQrModal(false);
+          setSelectedQrItem(null);
+        }}
+      />
+
+      {/* QR Code Camera Scanner Modal */}
+      <QrScannerModal
+        isOpen={showScannerModal}
+        onClose={() => setShowScannerModal(false)}
+        inventory={inventory}
+        bookings={bookings}
+        onMarkPickedUp={(b) => {
+          updateStatus(b._key || b.id, b.id || b.userName, 'active');
+          fetchAll();
+        }}
+        onMarkReturned={(b) => {
+          setSelectedBooking(b);
+        }}
       />
     </div>
   );

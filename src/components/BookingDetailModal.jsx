@@ -4,6 +4,7 @@ import { X, Check, XCircle, FileText, ChevronDown, AlertTriangle, Plus } from 'l
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { uploadFileToR2 } from '../utils/uploader';
+import SignaturePad from './SignaturePad';
 
 const BK_STATUS_LABEL = {
   pending: "Menunggu Approval",
@@ -35,6 +36,7 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
   });
   const [returnNote, setReturnNote] = useState('');
   const [proofFile, setProofFile] = useState(null);
+  const [signatureData, setSignatureData] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   if (!booking) return null;
@@ -44,8 +46,6 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
   const handleGenerateClick = () => {
     navigate(`/admin/surat/${booking.id || booking._key}`);
   };
-
-  
 
   const startReturnProcess = (status) => {
     setReturnStatus(status);
@@ -70,7 +70,12 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
       setIsUploading(false);
     }
     
-    onMarkReturned(booking, returnStatus, returnConditions, returnNote, proofUrl);
+    const finalConditions = { ...returnConditions };
+    if (signatureData) {
+      finalConditions._signature = signatureData;
+    }
+
+    onMarkReturned(booking, returnStatus, finalConditions, returnNote, proofUrl);
   };
 
   return (
@@ -154,6 +159,32 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
                     </label>
                   )}
                 </div>
+              </div>
+
+              {/* TANDA TANGAN DIGITAL SERAH TERIMA */}
+              <div className="border border-border/80 rounded-xl p-4 bg-muted/20">
+                <SignaturePad 
+                  onSave={(dataUrl) => {
+                    setSignatureData(dataUrl);
+                    toast.success("Tanda tangan tersimpan untuk serah terima.", "Tanda Tangan");
+                  }}
+                  title="TANDA TANGAN DIGITAL SERAH TERIMA PENGEMBALIAN"
+                  subtitle="Tanda tangan kru/peminjam di layar touch HP atau tablet untuk verifikasi fisik alat"
+                />
+                {signatureData && (
+                  <div className="mt-3 p-2 bg-background border border-emerald-500/30 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                      <Check className="w-4 h-4" /> Tanda tangan digital siap diserahkan
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSignatureData(null)}
+                      className="text-[11px] text-foreground/50 hover:text-destructive underline"
+                    >
+                      Tanda Tangan Ulang
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -261,6 +292,25 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
                 <div className="mt-3 bg-destructive/5 border border-destructive/20 p-3 rounded-lg">
                   <div className="text-[10px] text-destructive/70 uppercase font-mono tracking-wider mb-1">CATATAN PENGEMBALIAN</div>
                   <div className="text-sm">{booking.returnNote}</div>
+                </div>
+              )}
+
+              {/* Tanda Tangan Digital Pengembalian */}
+              {(booking.return_checklist?._signature || booking.returnChecklist?._signature) && (
+                <div className="mt-3 bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-4">
+                  <div className="h-16 w-32 bg-white rounded-lg border border-border p-1 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <img 
+                      src={booking.return_checklist?._signature || booking.returnChecklist?._signature} 
+                      alt="Tanda Tangan Digital" 
+                      className="max-h-full max-w-full object-contain" 
+                    />
+                  </div>
+                  <div className="text-xs text-foreground/75">
+                    <div className="font-bold text-foreground flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                      <Check className="w-3.5 h-3.5" /> Terverifikasi Tanda Tangan Digital
+                    </div>
+                    <div className="text-[11px] opacity-75 mt-0.5">Tanda tangan resmi kru saat serah terima pengembalian alat.</div>
+                  </div>
                 </div>
               )}
             </div>
