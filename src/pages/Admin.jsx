@@ -1066,20 +1066,30 @@ export default function Admin() {
   };
 
   const handleToggleMaintenance = async () => {
+    const nextVal = !maintenanceMode;
+    // ⚡ INSTANT OPTIMISTIC STATE UPDATE
+    setMaintenanceMode(nextVal);
     try {
-      const nextVal = !maintenanceMode;
-      const { error } = await supabase.from('config').update({ value: nextVal }).eq('key', 'maintenanceMode');
-      if (error) throw error;
+      const { error } = await supabase.from('config').upsert({ key: 'maintenanceMode', value: nextVal }, { onConflict: 'key' });
+      if (error) {
+        // Rollback on error
+        setMaintenanceMode(!nextVal);
+        throw error;
+      }
       logActivity(`Mengubah status Maintenance menjadi ${nextVal ? 'ON' : 'OFF'}`, currentUser?.email);
       toast.success(`Status Maintenance website berhasil diubah menjadi ${nextVal ? 'ON (Aktif)' : 'OFF (Nonaktif)'}.`, "Mode Maintenance");
     } catch (e) {
+      setMaintenanceMode(!nextVal);
       toast.error("Gagal mengubah maintenance: " + e.message, "Gagal Memperbarui");
     }
   };
 
   const saveAnnouncement = async () => {
     try {
-      const { error } = await supabase.from('config').update({ value: { enabled: announceEnabled, text: announceText } }).eq('key', 'announcement');
+      const { error } = await supabase.from('config').upsert({ 
+        key: 'announcement', 
+        value: { enabled: announceEnabled, text: announceText } 
+      }, { onConflict: 'key' });
       if (error) throw error;
       logActivity("Update Pengumuman System", currentUser?.email);
       toast.success("Pengumuman berhasil diperbarui dan disiarkan!", "Pengumuman Disimpan");
@@ -1101,7 +1111,10 @@ export default function Admin() {
 
   const saveWaNumbers = async () => {
     try {
-      const { error } = await supabase.from('config').update({ value: waNumbers }).eq('key', 'adminWaNumbers');
+      const { error } = await supabase.from('config').upsert({ 
+        key: 'adminWaNumbers', 
+        value: waNumbers 
+      }, { onConflict: 'key' });
       if (error) throw error;
       logActivity("Update Nomor WA Admin", currentUser?.email);
       toast.success("Daftar nomor WhatsApp Admin berhasil disimpan!", "Nomor WA Disimpan");
@@ -2911,8 +2924,16 @@ export default function Admin() {
           <button className="px-3 py-1.5 bg-background text-foreground hover:bg-accent border border-border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5" onClick={() => setShowAnnounceModal(true)}>
             <Megaphone className="w-3.5 h-3.5" /> Pengumuman
           </button>
-          <button className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${maintenanceMode ? 'bg-destructive/10 text-destructive border-destructive/30' : 'bg-background text-foreground hover:bg-accent border-border'}`} onClick={handleToggleMaintenance}>
-            <Settings className="w-3.5 h-3.5" /> Maintenance: {maintenanceMode ? 'ON' : 'OFF'}
+          <button 
+            className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              maintenanceMode 
+                ? 'bg-destructive text-destructive-foreground border-destructive shadow-md shadow-destructive/20 font-black' 
+                : 'bg-background text-foreground hover:bg-accent border-border'
+            }`} 
+            onClick={handleToggleMaintenance}
+            title={maintenanceMode ? "Klik untuk mematikan mode maintenance" : "Klik untuk mengaktifkan mode maintenance"}
+          >
+            <Settings className={`w-3.5 h-3.5 ${maintenanceMode ? 'animate-spin' : ''}`} /> Maintenance: {maintenanceMode ? 'ON' : 'OFF'}
           </button>
           <button className="px-3 py-1.5 bg-background text-foreground hover:bg-accent border border-border rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5" onClick={() => setShowWaModal(true)}>
             <Phone className="w-3.5 h-3.5" /> Nomor WA
@@ -3034,8 +3055,15 @@ export default function Admin() {
             <button className="px-4 py-3 bg-muted/50 text-foreground hover:bg-accent rounded-xl text-sm font-bold flex items-center gap-3 text-left transition-colors" onClick={() => setShowAnnounceModal(true)}>
               <Megaphone className="w-4 h-4" /> Pengumuman
             </button>
-            <button className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 text-left transition-colors ${maintenanceMode ? 'bg-destructive/10 text-destructive border border-destructive/30' : 'bg-muted/50 text-foreground hover:bg-accent'}`} onClick={handleToggleMaintenance}>
-              <Settings className="w-4 h-4" /> Maint: {maintenanceMode ? 'ON' : 'OFF'}
+            <button 
+              className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 text-left transition-all cursor-pointer ${
+                maintenanceMode 
+                  ? 'bg-destructive text-destructive-foreground border border-destructive shadow-md shadow-destructive/20' 
+                  : 'bg-muted/50 text-foreground hover:bg-accent'
+              }`} 
+              onClick={handleToggleMaintenance}
+            >
+              <Settings className={`w-4 h-4 ${maintenanceMode ? 'animate-spin' : ''}`} /> Maint: {maintenanceMode ? 'ON' : 'OFF'}
             </button>
             <button className="px-4 py-3 bg-muted/50 text-foreground hover:bg-accent rounded-xl text-sm font-bold flex items-center gap-3 text-left transition-colors" onClick={() => setShowWaModal(true)}>
               <Phone className="w-4 h-4" /> Nomor WA
