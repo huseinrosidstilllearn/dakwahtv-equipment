@@ -603,54 +603,107 @@ export default function Katalog() {
         </div>
       </header>
 
-      {/* Controls */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 space-y-4">
-        <div className="flex gap-3 h-12">
+      {/* Sticky Modern Controls */}
+      <div className="sticky top-16 sm:top-20 z-30 max-w-7xl mx-auto px-4 md:px-8 py-3 mb-6 bg-background/80 dark:bg-background/85 backdrop-blur-xl border-y border-border/40 transition-all space-y-3">
+        <div className="flex gap-2.5 h-11">
           <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40 w-5 h-5 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/40 w-4 h-4 group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="Cari alat berdasarkan nama..."
-              className="w-full h-full pl-12 pr-4 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm transition-all shadow-sm"
+              placeholder="Cari alat (cth: Sony FX3, Lensa 24-70, Rode Wireless)..."
+              className="w-full h-full pl-10 pr-4 bg-card/60 border border-border rounded-xl focus:outline-none focus:border-primary text-xs sm:text-sm transition-all shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <button 
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 md:px-6 rounded-xl text-sm font-bold tracking-wide transition-all ${
-              showFilters ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card border border-border text-foreground hover:bg-accent'
+            className={`flex items-center gap-1.5 px-3.5 sm:px-5 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
+              showFilters 
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
+                : 'bg-card/60 border border-border text-foreground hover:bg-muted'
             }`}
           >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">FILTER</span>
+            <Filter className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Filter</span>
           </button>
         </div>
 
+        {/* Filter Drawer / Accordion */}
         {showFilters && (
-          <div className="space-y-4 bg-card/50 border border-border p-4 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex gap-2 w-full overflow-x-auto pb-2 scrollbar-none">
-              <button onClick={() => setFilter('all')} className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'all' ? 'bg-foreground text-background' : 'bg-background border border-border text-foreground/80 hover:bg-accent'}`}>
+          <div className="space-y-3 bg-card/70 border border-border p-3.5 rounded-2xl shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex gap-1.5 w-full overflow-x-auto pb-1 scrollbar-none">
+              <button 
+                type="button"
+                onClick={() => setFilter('all')} 
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  filter === 'all' 
+                    ? 'bg-foreground text-background font-bold shadow-sm' 
+                    : 'bg-background/60 border border-border text-foreground/70 hover:text-foreground'
+                }`}
+              >
                 Semua Status
               </button>
-              <button onClick={() => setFilter('ready')} className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filter === 'ready' ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-background border border-border text-foreground/80 hover:bg-accent'}`}>
-                <CheckCircle2 className="w-4 h-4" /> Ready
+              <button 
+                type="button"
+                onClick={() => setFilter('ready')} 
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filter === 'ready' 
+                    ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/50 font-bold' 
+                    : 'bg-background/60 border border-border text-foreground/70 hover:text-foreground'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" /> Ready to Shoot
               </button>
-              <button onClick={() => setFilter('attention')} className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filter === 'attention' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'bg-background border border-border text-foreground/80 hover:bg-accent'}`}>
-                <AlertTriangle className="w-4 h-4" /> Maintenance
+              <button 
+                type="button"
+                onClick={() => setFilter('attention')} 
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filter === 'attention' 
+                    ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50 font-bold' 
+                    : 'bg-background/60 border border-border text-foreground/70 hover:text-foreground'
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" /> Maintenance
               </button>
-              <button onClick={() => setFilter('unavailable')} className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filter === 'unavailable' ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-background border border-border text-foreground/80 hover:bg-accent'}`}>
-                <AlertCircle className="w-4 h-4" /> Not Ready
+              <button 
+                type="button"
+                onClick={() => setFilter('unavailable')} 
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  filter === 'unavailable' 
+                    ? 'bg-rose-500/20 text-rose-500 border border-rose-500/50 font-bold' 
+                    : 'bg-background/60 border border-border text-foreground/70 hover:text-foreground'
+                }`}
+              >
+                <AlertCircle className="w-3.5 h-3.5" /> Not Ready / Dipinjam
               </button>
             </div>
             
-            <div className="flex items-center gap-2 w-full overflow-x-auto pt-4 border-t border-border pb-1 scrollbar-none">
-              <span className="text-xs font-mono text-foreground/50 tracking-wider font-semibold shrink-0 mr-2">KATEGORI:</span>
-              <button onClick={() => setCatFilter('all')} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${catFilter === 'all' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-accent'}`}>
+            <div className="flex items-center gap-1.5 w-full overflow-x-auto pt-2.5 border-t border-border/50 pb-1 scrollbar-none">
+              <span className="text-[10px] font-mono text-foreground/50 tracking-wider font-bold shrink-0 mr-1.5 uppercase">KATEGORI:</span>
+              <button 
+                type="button"
+                onClick={() => setCatFilter('all')} 
+                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  catFilter === 'all' 
+                    ? 'bg-primary text-primary-foreground font-bold shadow-sm' 
+                    : 'text-foreground/70 hover:bg-muted'
+                }`}
+              >
                 Semua
               </button>
               {allAvailableCats.map(c => (
-                <button key={c} onClick={() => setCatFilter(c)} className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${catFilter === c ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-accent'}`}>
+                <button 
+                  key={c} 
+                  type="button"
+                  onClick={() => setCatFilter(c)} 
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    catFilter === c 
+                      ? 'bg-primary text-primary-foreground font-bold shadow-sm' 
+                      : 'text-foreground/70 hover:bg-muted'
+                  }`}
+                >
                   {c}
                 </button>
               ))}
@@ -686,64 +739,106 @@ export default function Katalog() {
                   const k = itemKey(it);
                   const notReadyNow = it.status !== "ready";
                   const statusKey = it.status || 'ready';
+                  const inCart = cart.some(c => c.id === it.id);
 
                   return (
-                    <div key={k} className="group relative flex flex-col bg-card rounded-xl overflow-hidden border border-border hover:border-teal/50 hover:shadow-glow transition-all duration-300 shadow-sm">
-                      {/* Thumbnail */}
-                      <div className="h-[110px] md:h-[130px] relative overflow-hidden flex items-center justify-center p-3 bg-muted/10">
+                    <div 
+                      key={k} 
+                      className={`group relative flex flex-col bg-card/80 dark:bg-[#0c171d]/80 rounded-2xl overflow-hidden border transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-0.5 ${
+                        inCart 
+                          ? 'border-primary/60 ring-1 ring-primary/40' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      {/* Thumbnail with quick calendar preview */}
+                      <div className="h-[115px] md:h-[135px] relative overflow-hidden flex items-center justify-center p-3 bg-muted/20">
                         {it.img ? (
-                          <img src={it.img} alt={it.name} loading="lazy" className="w-full h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500" />
+                          <img 
+                            src={it.img} 
+                            alt={it.name} 
+                            loading="lazy" 
+                            className="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-500" 
+                          />
                         ) : (
                           <span className="text-3xl font-black text-foreground/10">?</span>
                         )}
+                        
                         {/* Calendar button top-right */}
                         <button
+                          type="button"
                           onClick={() => openCalendar(it)}
-                          className="absolute top-2 right-2 p-1.5 bg-background/80 hover:bg-card text-foreground/60 hover:text-primary rounded-lg transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm shadow"
-                          title="Lihat Kalender"
+                          className="absolute top-2 right-2 p-1.5 bg-background/80 hover:bg-card text-foreground/60 hover:text-primary rounded-xl transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm shadow border border-border/50 cursor-pointer"
+                          title="Lihat Jadwal Booking di Kalender"
                         >
                           <CalendarDays className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       {/* Content */}
-                      <div className="p-3 flex-1 flex flex-col">
-                          <span className="text-[9px] font-mono text-foreground/50 uppercase tracking-widest mb-0.5">
+                      <div className="p-3 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[9px] font-mono text-foreground/50 uppercase tracking-widest mb-0.5 block">
                             {it.group || it.cat}
                           </span>
-                          <h3 className="font-bold text-xs md:text-sm leading-tight text-foreground mb-1 flex-1">{it.name}</h3>
+                          <h3 className="font-bold text-xs md:text-sm leading-tight text-foreground mb-1">
+                            {it.name}
+                          </h3>
 
                           {(it.notes || it.keterangan || it.desc) ? (
-                            <div className="text-[9px] text-yellow-600/90 dark:text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 leading-tight line-clamp-2 mb-2 mt-0.5" title={it.notes || it.keterangan || it.desc}>
+                            <div className="text-[9px] text-amber-600/90 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 leading-tight line-clamp-2 mb-2 mt-0.5" title={it.notes || it.keterangan || it.desc}>
                               <span className="font-bold mr-1">Kondisi:</span>{it.notes || it.keterangan || it.desc}
                             </div>
                           ) : (
-                            <div className="mb-2 flex-1"></div>
+                            <div className="mb-2"></div>
                           )}
-
-                          {/* Status */}
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <div className={`w-2 h-2 rounded-full ${STATUS_DOT[statusKey]}`}></div>
-                          <span className={`text-[9px] font-bold tracking-widest uppercase ${STATUS_COLOR[statusKey]}`}>
-                            {STATUS_LABEL[statusKey]}
-                          </span>
                         </div>
 
-                        {/* Not Ready Box */}
-                        {notReadyNow && (
-                          <div className={`mb-2 border rounded p-1.5 text-[9px] leading-tight ${STATUS_BOX[statusKey] || STATUS_BOX.unavailable}`}>
-                            {statusKey === 'attention' ? <><span className="font-bold">⚠ Lagi maintenance</span> — tetap bisa di-booking buat tanggal ke depan, cek dulu kalender.</> : <><span className="font-bold">✕ Lagi not ready</span>. Alat tidak tersedia saat ini.</>}
+                        <div>
+                          {/* Pulsing Status Dot */}
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <span className="relative flex h-2 w-2">
+                              {statusKey === 'ready' && (
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              )}
+                              <span className={`relative inline-flex rounded-full h-2 w-2 ${STATUS_DOT[statusKey]}`}></span>
+                            </span>
+                            <span className={`text-[9px] font-bold tracking-widest uppercase ${STATUS_COLOR[statusKey]}`}>
+                              {STATUS_LABEL[statusKey]}
+                            </span>
                           </div>
-                        )}
 
-                        {/* Add to Cart Button */}
-                        <button
-                          onClick={() => addToCart(it)}
-                          className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-primary/20 hover:bg-primary text-primary hover:text-primary-foreground rounded-lg text-[10px] font-bold tracking-wider transition-all border border-primary/30 hover:border-primary"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Tambah ke Keranjang
-                        </button>
+                          {/* Not Ready Notice */}
+                          {notReadyNow && (
+                            <div className={`mb-2 border rounded-xl p-1.5 text-[9px] leading-tight ${STATUS_BOX[statusKey] || STATUS_BOX.unavailable}`}>
+                              {statusKey === 'attention' ? (
+                                <><span className="font-bold">⚠ Lagi maintenance</span> — tetap bisa di-booking buat jadwal depan, cek kalender.</>
+                              ) : (
+                                <><span className="font-bold">✕ Sedang tidak siap</span> — cek jadwal kalender.</>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Add to Cart Button with In-Cart State */}
+                          <button
+                            type="button"
+                            onClick={() => addToCart(it)}
+                            className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[10px] font-bold tracking-wider transition-all cursor-pointer ${
+                              inCart
+                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 shadow-sm'
+                                : 'bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 hover:border-primary shadow-sm'
+                            }`}
+                          >
+                            {inCart ? (
+                              <>
+                                <Check className="w-3 h-3" /> Di Keranjang (+1)
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-3 h-3" /> Booking Alat
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -753,6 +848,23 @@ export default function Katalog() {
           );
         })}
       </div>
+
+      {/* Floating Bottom Cart Pill */}
+      {cart.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-5 duration-300">
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="flex items-center gap-3 px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20"
+          >
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground text-[10px] font-black">
+              {cart.length}
+            </div>
+            <span>Lihat Keranjang & Ajukan Booking</span>
+            <span className="text-primary-foreground/75">→</span>
+          </button>
+        </div>
+      )}
 
       {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} mode={authMode} setMode={setAuthMode} onSubmit={handleAuthSubmit} errorMsg={authError} />
