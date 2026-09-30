@@ -566,52 +566,52 @@ export default function Katalog() {
         </p>
 
         {/* Stats Bar */}
-        <div className="flex items-center gap-3 md:gap-6 flex-wrap justify-center bg-card/80 border border-border px-6 py-3 rounded-full shadow-sm font-mono text-xs font-semibold">
-          <div className="flex items-center gap-2 group cursor-default">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-wrap justify-center bg-card/80 border border-border px-3.5 py-2.5 sm:px-6 sm:py-3 rounded-2xl sm:rounded-full shadow-sm font-mono text-[11px] sm:text-xs font-semibold">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-primary"></div>
-            <span className="text-foreground/80 tracking-widest drop-shadow-[0_0_8px_rgba(38,166,149,0.5)]">SEMUA ALAT</span>
+            <span className="text-foreground/80 tracking-wider sm:tracking-widest drop-shadow-[0_0_8px_rgba(38,166,149,0.5)]">SEMUA ALAT</span>
             <span className="font-black text-foreground ml-1 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{items.length}</span>
           </div>
-          <div className="w-px h-4 bg-border/50 hidden md:block"></div>
+          <div className="w-px h-3.5 sm:h-4 bg-border/50 hidden md:block"></div>
           
-          <div className="flex items-center gap-2 group cursor-default">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-green"></div>
-            <span className="text-emerald-700 dark:text-green-400 font-bold tracking-widest">READY</span>
+            <span className="text-emerald-700 dark:text-green-400 font-bold tracking-wider sm:tracking-widest">READY</span>
             <span className="font-black text-emerald-700 dark:text-green-400 ml-1">{readyCount}</span>
           </div>
-          <div className="w-px h-4 bg-border/50 hidden md:block"></div>
+          <div className="w-px h-3.5 sm:h-4 bg-border/50 hidden md:block"></div>
           
-          <div className="flex items-center gap-2 group cursor-default">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-yellow"></div>
-            <span className="text-amber-700 dark:text-yellow-400 font-bold tracking-widest">MAINTENANCE</span>
+            <span className="text-amber-700 dark:text-yellow-400 font-bold tracking-wider sm:tracking-widest">MAINTENANCE</span>
             <span className="font-black text-amber-700 dark:text-yellow-400 ml-1">{maintCount}</span>
           </div>
-          <div className="w-px h-4 bg-border/50 hidden md:block"></div>
+          <div className="w-px h-3.5 sm:h-4 bg-border/50 hidden md:block"></div>
 
-          <div className="flex items-center gap-2 group cursor-default">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-red"></div>
-            <span className="text-rose-700 dark:text-red-400 font-bold tracking-widest">NOT READY</span>
+            <span className="text-rose-700 dark:text-red-400 font-bold tracking-wider sm:tracking-widest">NOT READY</span>
             <span className="font-black text-rose-700 dark:text-red-400 ml-1">{notReadyCount}</span>
           </div>
-          <div className="w-px h-4 bg-border/50 hidden md:block"></div>
+          <div className="w-px h-3.5 sm:h-4 bg-border/50 hidden md:block"></div>
 
-          <div className="flex items-center gap-2 group cursor-default">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-blue"></div>
-            <span className="text-sky-700 dark:text-blue-400 font-bold tracking-widest">DIPINJAM</span>
+            <span className="text-sky-700 dark:text-blue-400 font-bold tracking-wider sm:tracking-widest">DIPINJAM</span>
             <span className="font-black text-sky-700 dark:text-blue-400 ml-1">{borrowedCount}</span>
           </div>
         </div>
       </header>
 
       {/* Sticky Modern Controls */}
-      <div className="sticky top-16 sm:top-20 z-30 max-w-7xl mx-auto px-4 md:px-8 py-3 mb-6 bg-background/80 dark:bg-background/85 backdrop-blur-xl border-y border-border/40 transition-all space-y-3">
-        <div className="flex gap-2.5 h-11">
+      <div className="sticky top-14 sm:top-20 z-30 max-w-7xl mx-auto px-4 md:px-8 py-2.5 sm:py-3 mb-6 bg-background/85 dark:bg-background/90 backdrop-blur-xl border-y border-border/40 transition-all space-y-3">
+        <div className="flex gap-2 sm:gap-2.5 h-10 sm:h-11">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/40 w-4 h-4 group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="Cari alat (cth: Sony FX3, Lensa 24-70, Rode Wireless)..."
-              className="w-full h-full pl-10 pr-4 bg-card/60 border border-border rounded-xl focus:outline-none focus:border-primary text-xs sm:text-sm transition-all shadow-sm"
+              placeholder="Cari alat (cth: Sony FX3, Lensa 24-70, Rode)..."
+              className="w-full h-full pl-10 pr-4 bg-card/60 border border-border rounded-xl focus:outline-none focus:border-primary text-base sm:text-sm transition-all shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -713,7 +713,7 @@ export default function Katalog() {
       </div>
 
       {/* Catalog Grid */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-28 sm:pb-20">
         {cats.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-foreground/40">
             <Search className="w-16 h-16 mb-4 opacity-50" />
@@ -767,7 +767,7 @@ export default function Katalog() {
                         <button
                           type="button"
                           onClick={() => openCalendar(it)}
-                          className="absolute top-2 right-2 p-1.5 bg-background/80 hover:bg-card text-foreground/60 hover:text-primary rounded-xl transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm shadow border border-border/50 cursor-pointer"
+                          className="absolute top-2 right-2 p-1.5 bg-background/85 hover:bg-card text-foreground/70 hover:text-primary rounded-xl transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 backdrop-blur-sm shadow border border-border/50 cursor-pointer"
                           title="Lihat Jadwal Booking di Kalender"
                         >
                           <CalendarDays className="w-3.5 h-3.5" />
@@ -851,17 +851,17 @@ export default function Katalog() {
 
       {/* Floating Bottom Cart Pill */}
       {cart.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-4 sm:bottom-6 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-40 animate-in slide-in-from-bottom-5 duration-300 flex justify-center">
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-3 px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20"
+            className="w-full sm:w-auto flex items-center justify-center gap-3 px-5 py-3 rounded-2xl sm:rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20"
           >
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground text-[10px] font-black">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground text-[10px] font-black shrink-0">
               {cart.length}
             </div>
             <span>Lihat Keranjang & Ajukan Booking</span>
-            <span className="text-primary-foreground/75">→</span>
+            <span className="text-primary-foreground/75 shrink-0">→</span>
           </button>
         </div>
       )}

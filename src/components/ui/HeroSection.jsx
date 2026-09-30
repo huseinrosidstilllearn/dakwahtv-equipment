@@ -52,18 +52,18 @@ const HeroSection = React.forwardRef(
     ref,
   ) => {
     return (
-      <div className={cn("relative min-h-[100dvh] flex flex-col items-center justify-center", className)} ref={ref} {...props}>
+      <div className={cn("relative min-h-[85dvh] sm:min-h-[92dvh] pt-20 sm:pt-24 pb-8 sm:pb-16 flex flex-col items-center justify-center", className)} ref={ref} {...props}>
         <div className="absolute top-0 z-[0] h-full w-full bg-primary/10 dark:bg-primary/5 bg-[radial-gradient(ellipse_20%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_20%_80%_at_50%_-20%,rgba(216,121,67,0.2),rgba(255,255,255,0))]" />
-        <section className="relative max-w-full mx-auto z-10 py-12 md:py-16 overflow-hidden w-full">
+        <section className="relative max-w-full mx-auto z-10 py-6 sm:py-12 md:py-16 overflow-hidden w-full">
           <RetroGrid {...gridOptions} />
-          <div className="max-w-screen-xl z-10 mx-auto px-4 py-10 md:py-20 gap-12 md:px-8 flex flex-col items-center">
-            <div className="space-y-6 max-w-4xl leading-0 lg:leading-5 mx-auto text-center">
-              <div className="relative mx-auto mb-6 md:mb-10 w-fit flex justify-center group">
+          <div className="max-w-screen-xl z-10 mx-auto px-4 py-6 sm:py-10 md:py-16 gap-8 sm:gap-12 md:px-8 flex flex-col items-center">
+            <div className="space-y-4 sm:space-y-6 max-w-4xl leading-normal mx-auto text-center">
+              <div className="relative mx-auto mb-4 sm:mb-8 md:mb-10 w-fit flex justify-center group">
                 <style>
                   {`
                     @keyframes float {
                       0%, 100% { transform: translateY(0); }
-                      50% { transform: translateY(-10px); }
+                      50% { transform: translateY(-8px); }
                     }
                     .animate-float {
                       animation: float 4s ease-in-out infinite;
@@ -75,7 +75,7 @@ const HeroSection = React.forwardRef(
                   <img 
                     src="/logo-hero.png" 
                     alt="Dakwah TV Logo" 
-                    className="relative z-10 h-28 sm:h-36 md:h-48 object-contain drop-shadow-[0_0_20px_rgba(38,166,149,0.4)] hover:drop-shadow-[0_0_35px_rgba(38,166,149,0.8)] hover:scale-105 transition-all duration-500"
+                    className="relative z-10 h-20 sm:h-28 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(38,166,149,0.4)] hover:drop-shadow-[0_0_35px_rgba(38,166,149,0.8)] hover:scale-105 transition-all duration-500" 
                   />
                 </div>
               </div>
@@ -90,19 +90,19 @@ const HeroSection = React.forwardRef(
                   }
                 `}
               </style>
-              <h1 className="text-sm md:text-lg font-bold animate-color-cycle group mx-auto px-6 py-2 bg-gradient-to-tr from-foreground/5 via-foreground/10 to-transparent border-[2px] border-border rounded-3xl w-fit">
+              <h1 className="text-xs sm:text-sm md:text-lg font-bold animate-color-cycle group mx-auto px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-tr from-foreground/5 via-foreground/10 to-transparent border-[2px] border-border rounded-3xl w-fit">
                 {title}
               </h1>
-              <h2 className="text-5xl md:text-6xl lg:text-7xl tracking-tighter font-display font-extrabold bg-clip-text text-transparent mx-auto bg-[linear-gradient(180deg,_#000_0%,_rgba(0,_0,_0,_0.75)_100%)] dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,_255,_255,_0.00)_202.08%)] mt-6">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tighter font-display font-extrabold bg-clip-text text-transparent mx-auto bg-[linear-gradient(180deg,_#000_0%,_rgba(0,_0,_0,_0.75)_100%)] dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,_255,_255,_0.00)_202.08%)] mt-4 sm:mt-6">
                 {subtitle.regular}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-light">
                   {subtitle.gradient}
                 </span>
               </h2>
-              <p className="max-w-2xl mx-auto text-foreground/70 mt-4 text-base md:text-lg">
+              <p className="max-w-2xl mx-auto text-foreground/70 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg leading-relaxed px-2">
                 {description}
               </p>
-              <div className="items-center justify-center gap-x-3 space-y-3 sm:flex sm:space-y-0 mt-8 mb-12">
+              <div className="items-center justify-center gap-x-3 space-y-3 sm:flex sm:space-y-0 mt-6 sm:mt-8 mb-6 sm:mb-12">
                 <span className="relative inline-block overflow-hidden rounded-full p-[2px]">
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#26a695_50%,transparent_100%)]" />
                   <div className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-background backdrop-blur-3xl">

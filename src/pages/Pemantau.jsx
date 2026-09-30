@@ -362,12 +362,12 @@ export default function Pemantau() {
       <Navbar theme={theme} setTheme={setTheme} />
       
       <header className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-12 flex flex-col items-center text-center">
-        <img src="/logo.png" className="w-full max-w-[220px] mb-8 drop-shadow-md" alt="Dakwah TV" />
-        <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-mono font-semibold">
+        <img src="/logo.png" className="w-full max-w-[150px] sm:max-w-[220px] mb-6 sm:mb-8 drop-shadow-md" alt="Dakwah TV" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 sm:mb-6 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-mono font-semibold">
           <div className="w-2 h-2 rounded-full dot-glow-primary"></div>
           <span>Live Availability</span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 uppercase">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-3 sm:mb-4 uppercase">
           EQUIPMENT <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-blue-500">AVAILABILITY</span>
         </h1>
         <p className="text-xs md:text-sm font-mono text-foreground/50 tracking-widest uppercase">
@@ -391,13 +391,13 @@ export default function Pemantau() {
 
       {/* Stats row */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-10">
-        <div className="flex items-center gap-3 md:gap-6 flex-wrap justify-center bg-card/80 border border-border px-6 py-3 rounded-full shadow-sm font-mono text-xs font-semibold">
-          <div className="flex items-center gap-2 group cursor-default">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-wrap justify-center bg-card/80 border border-border px-3.5 py-2.5 sm:px-6 sm:py-3 rounded-2xl sm:rounded-full shadow-sm font-mono text-[11px] sm:text-xs font-semibold">
+          <div className="flex items-center gap-1.5 sm:gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-primary"></div>
-            <span className="text-foreground/80 tracking-widest drop-shadow-[0_0_8px_rgba(38,166,149,0.5)]">SEMUA ALAT</span>
+            <span className="text-foreground/80 tracking-wider sm:tracking-widest drop-shadow-[0_0_8px_rgba(38,166,149,0.5)]">SEMUA ALAT</span>
             <span className="font-black text-foreground ml-1 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{items.length}</span>
           </div>
-          <div className="w-px h-4 bg-border/50 hidden md:block"></div>
+          <div className="w-px h-3.5 sm:h-4 bg-border/50 hidden md:block"></div>
           
           <div className="flex items-center gap-2 group cursor-default">
             <div className="w-2 h-2 rounded-full dot-glow-green"></div>
