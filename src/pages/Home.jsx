@@ -108,7 +108,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <HeroSection 
-        title="DAKWAH TV EQUIPMENT"
         subtitle={{
           regular: "Manajemen Alat Produksi ",
           gradient: "Cepat & Terpadu."

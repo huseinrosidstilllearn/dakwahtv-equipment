@@ -78,14 +78,14 @@ export default function Navbar({
     <header className="fixed top-2.5 sm:top-4 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[94%] max-w-6xl z-50">
       <nav className="rounded-2xl bg-card/85 dark:bg-[#0c171d]/90 backdrop-blur-xl border border-border/80 shadow-2xl shadow-primary/5 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between transition-all">
         
-        {/* Brand identity: Clean logo without redundant wrapping text */}
+        {/* Brand identity: Clean 3D logo mark without redundant wrapping text */}
         <Link to="/" className="flex items-center group shrink-0" title="Beranda Dakwah TV">
           <div className="relative flex items-center">
             <div className="absolute inset-0 bg-primary/20 blur-md rounded-full group-hover:scale-125 transition-transform" />
             <img 
-              src="/logo-hero.png" 
+              src="/logo-mark.png" 
               alt="Dakwah TV" 
-              className="relative z-10 h-6.5 sm:h-7.5 md:h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              className="relative z-10 h-7 w-7 sm:h-8 sm:w-8 object-contain transition-transform group-hover:scale-105"
             />
           </div>
         </Link>

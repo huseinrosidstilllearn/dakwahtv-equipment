@@ -2939,7 +2939,10 @@ export default function Admin() {
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-8 animate-in fade-in zoom-in-95">
             <div className="flex flex-col items-center mb-8">
-              <img src="/logo.png" alt="Dakwah TV" className="h-12 mb-6 drop-shadow-md" />
+              <div className="relative mb-4 group">
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:scale-125 transition-transform" />
+                <img src="/logo-mark.png" alt="Dakwah TV" className="relative z-10 w-16 h-16 object-contain drop-shadow-md hover:scale-105 transition-transform" />
+              </div>
               <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-mono font-bold uppercase">
                 <div className="w-2 h-2 rounded-full dot-glow-red"></div>
                 Secure Area
@@ -3002,7 +3005,7 @@ export default function Admin() {
           
           {/* Center: Logo (Absolutely Centered) */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer z-10 hover:scale-105 transition-transform" onClick={(e) => { e.stopPropagation(); navigate('/'); }}>
-             <img src="/logo.png" className="h-6 object-contain drop-shadow-md brightness-0 invert" alt="Logo" />
+             <img src="/logo-mark.png" className="h-6 w-6 object-contain drop-shadow-md" alt="Logo" />
           </div>
           
           {/* Right: Actions */}
@@ -3024,8 +3027,8 @@ export default function Admin() {
 
       {/* Desktop Header */}
       <header className="hidden xl:flex bg-card border-b border-border py-4 px-8 items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-4">
-          <img src="/logo.png" className="h-10 drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')} alt="Logo" />
+        <div className="flex items-center gap-3">
+          <img src="/logo-mark.png" className="h-9 w-9 object-contain drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')} alt="Logo" />
           <div>
              <div className="text-[10px] font-mono text-primary font-bold uppercase tracking-wider flex items-center gap-1.5"><div className="w-2 h-2 rounded-full dot-glow-primary"></div> Admin Dashboard</div>
              <h1 className="font-heading font-black text-xl leading-none uppercase tracking-tight">DAKWAH TV <span className="text-primary">ADMIN</span></h1>

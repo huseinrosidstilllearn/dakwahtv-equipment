@@ -557,7 +557,10 @@ export default function Katalog() {
       )}
 
       <header className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-6 flex flex-col items-center text-center">
-        <img src="/logo.png" className="w-full max-w-[180px] mb-6 drop-shadow-md" alt="Dakwah TV" />
+        <div className="relative mb-4 group">
+          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:scale-125 transition-transform" />
+          <img src="/logo-mark.png" className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform" alt="Dakwah TV" />
+        </div>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-3 uppercase">
           KATALOG <span className="text-primary">ALAT</span>
         </h1>

@@ -362,7 +362,10 @@ export default function Pemantau() {
       <Navbar theme={theme} setTheme={setTheme} />
       
       <header className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-12 flex flex-col items-center text-center">
-        <img src="/logo.png" className="w-full max-w-[150px] sm:max-w-[220px] mb-6 sm:mb-8 drop-shadow-md" alt="Dakwah TV" />
+        <div className="relative mb-4 sm:mb-6 group">
+          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:scale-125 transition-transform" />
+          <img src="/logo-mark.png" className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform" alt="Dakwah TV" />
+        </div>
         <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 sm:mb-6 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-mono font-semibold">
           <div className="w-2 h-2 rounded-full dot-glow-primary"></div>
           <span>Live Availability</span>

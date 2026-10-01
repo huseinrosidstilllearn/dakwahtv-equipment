@@ -68,6 +68,10 @@
   Cache-Control: public, max-age=86400
   X-Content-Type-Options: nosniff
 
+/logo-mark.png
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
+
 /favicon*
   Cache-Control: public, max-age=86400
   X-Content-Type-Options: nosniff

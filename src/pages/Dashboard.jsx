@@ -429,7 +429,10 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background text-foreground pt-20 pb-20 selection:bg-primary selection:text-primary-foreground">
         <header className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-12 flex flex-col items-center text-center">
-          <img src="/logo.png" className="w-full max-w-[220px] mb-8 drop-shadow-md" alt="Logo" />
+          <div className="relative mb-6 group">
+            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:scale-125 transition-transform" />
+            <img src="/logo-mark.png" className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform" alt="Logo" />
+          </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-mono font-semibold">
             <div className="w-2 h-2 rounded-full dot-glow-primary"></div>
             <span>Area Peminjam</span>
@@ -474,7 +477,7 @@ export default function Dashboard() {
           </button>
           
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer z-10 hover:scale-105 transition-transform" onClick={() => window.location.href='/'}>
-             <img src="/logo.png" className="h-6 object-contain drop-shadow-md brightness-0 invert" alt="Logo" />
+             <img src="/logo-mark.png" className="h-6 w-6 object-contain drop-shadow-md" alt="Logo" />
           </div>
           <div className="flex items-center gap-1 relative z-10">
             <button onClick={toggleTheme} className="p-2 text-white/70 hover:text-white transition-colors">
@@ -489,8 +492,8 @@ export default function Dashboard() {
 
       {/* Desktop Header */}
       <header className="hidden md:flex sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-6 md:px-8 justify-between items-center">
-        <div className="flex items-center gap-4">
-          <img src="/logo.png" className="h-8 md:h-10 object-contain drop-shadow-md" alt="Logo" />
+        <div className="flex items-center gap-3">
+          <img src="/logo-mark.png" className="h-8 w-8 object-contain drop-shadow-md" alt="Logo" />
           <h1 className="font-black text-xl tracking-tight uppercase text-primary">Dashboard</h1>
         </div>
         <div className="flex items-center gap-3">

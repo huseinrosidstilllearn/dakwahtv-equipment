@@ -37,7 +37,7 @@ const HeroSection = React.forwardRef(
   (
     {
       className,
-      title = "Build products for everyone",
+      title,
       subtitle = {
         regular: "Designing your projects faster with ",
         gradient: "the largest figma UI kit.",
@@ -73,26 +73,30 @@ const HeroSection = React.forwardRef(
                 <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full group-hover:bg-primary/40 group-hover:scale-110 transition-all duration-700 animate-pulse" />
                 <div className="relative p-2 animate-float">
                   <img 
-                    src="/logo-hero.png" 
-                    alt="Dakwah TV Logo" 
-                    className="relative z-10 h-20 sm:h-28 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(38,166,149,0.4)] hover:drop-shadow-[0_0_35px_rgba(38,166,149,0.8)] hover:scale-105 transition-all duration-500" 
+                    src="/logo-mark.png" 
+                    alt="Logo Dakwah TV Equipment" 
+                    className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain drop-shadow-[0_0_25px_rgba(38,166,149,0.45)] hover:drop-shadow-[0_0_40px_rgba(38,166,149,0.85)] hover:scale-105 transition-all duration-500" 
                   />
                 </div>
               </div>
-              <style>
-                {`
-                  @keyframes colorCycle {
-                    0%, 100% { color: #26A69A; text-shadow: 0 0 10px rgba(38,166,149,0.5); }
-                    50% { color: #80CBC4; text-shadow: 0 0 15px rgba(128,203,196,0.8); }
-                  }
-                  .animate-color-cycle {
-                    animation: colorCycle 3s ease-in-out infinite;
-                  }
-                `}
-              </style>
-              <h1 className="text-xs sm:text-sm md:text-lg font-bold animate-color-cycle group mx-auto px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-tr from-foreground/5 via-foreground/10 to-transparent border-[2px] border-border rounded-3xl w-fit">
-                {title}
-              </h1>
+              {title && (
+                <>
+                  <style>
+                    {`
+                      @keyframes colorCycle {
+                        0%, 100% { color: #26A69A; text-shadow: 0 0 10px rgba(38,166,149,0.5); }
+                        50% { color: #80CBC4; text-shadow: 0 0 15px rgba(128,203,196,0.8); }
+                      }
+                      .animate-color-cycle {
+                        animation: colorCycle 3s ease-in-out infinite;
+                      }
+                    `}
+                  </style>
+                  <h1 className="text-xs sm:text-sm md:text-lg font-bold animate-color-cycle group mx-auto px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-tr from-foreground/5 via-foreground/10 to-transparent border-[2px] border-border rounded-3xl w-fit">
+                    {title}
+                  </h1>
+                </>
+              )}
               <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tighter font-display font-extrabold bg-clip-text text-transparent mx-auto bg-[linear-gradient(180deg,_#000_0%,_rgba(0,_0,_0,_0.75)_100%)] dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,_255,_255,_0.00)_202.08%)] mt-4 sm:mt-6">
                 {subtitle.regular}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-light">
