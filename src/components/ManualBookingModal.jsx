@@ -4,6 +4,8 @@ import { supabase } from '../supabase';
 import { useToast } from '../context/ToastContext';
 import { sortCategories } from '../utils/categories';
 import { sendTelegramAlert, formatManualBookingTelegramMessage } from '../utils/telegram';
+import CustomSelect from './ui/CustomSelect';
+import CustomDatePicker from './ui/CustomDatePicker';
 
 export default function ManualBookingModal({ isOpen, onClose, inventory, currentUser, telegramConfig, onBookingCreated }) {
   const { toast } = useToast();
@@ -37,6 +39,8 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name || !formData.phone) return toast.warning("Lengkapi data peminjam!", "Data Belum Lengkap");
+    if (!formData.dateStart || !formData.dateEnd) return toast.warning("Pilih tanggal peminjaman & pengembalian!", "Tanggal Belum Lengkap");
     if (cart.length === 0) return toast.warning("Pilih minimal 1 alat untuk dipinjam!", "Keranjang Kosong");
     
     setIsSubmitting(true);
@@ -185,11 +189,16 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
               </div>
               <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><MapPin className="w-3 h-3"/> Asal / Divisi</label>
-                <select required value={formData.origin} onChange={e=>setFormData({...formData, origin: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none cursor-pointer">
-                  <option value="" disabled>Pilih Asal/Divisi...</option>
-                  <option value="Internal Dakwah TV">Internal Dakwah TV</option>
-                  <option value="Eksternal">Eksternal</option>
-                </select>
+                <CustomSelect 
+                  value={formData.origin} 
+                  onChange={(val) => setFormData({ ...formData, origin: val })}
+                  options={[
+                    { value: 'Internal Dakwah TV', label: 'Internal Dakwah TV', description: 'Kru & pengurus aktif Dakwah TV' },
+                    { value: 'Eksternal', label: 'Eksternal', description: 'Peminjam luar divisi / ormawa lain' }
+                  ]}
+                  placeholder="Pilih Asal/Divisi..."
+                  icon={MapPin}
+                />
               </div>
               <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><FileText className="w-3 h-3"/> Keperluan</label>
@@ -197,20 +206,43 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Ambil</label>
-                <input required type="date" value={formData.dateStart} onChange={e=>setFormData({...formData, dateStart: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" />
+                <CustomDatePicker
+                  value={formData.dateStart}
+                  onChange={(val) => {
+                    let end = formData.dateEnd;
+                    if (end && val && val > end) end = val;
+                    setFormData({ ...formData, dateStart: val, dateEnd: end });
+                  }}
+                  placeholder="Pilih tgl ambil"
+                  rangeStart={formData.dateStart}
+                  rangeEnd={formData.dateEnd}
+                  align="left"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Kembali</label>
-                <input required type="date" value={formData.dateEnd} onChange={e=>setFormData({...formData, dateEnd: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" />
+                <CustomDatePicker
+                  value={formData.dateEnd}
+                  onChange={(val) => setFormData({ ...formData, dateEnd: val })}
+                  minDate={formData.dateStart}
+                  rangeStart={formData.dateStart}
+                  rangeEnd={formData.dateEnd}
+                  placeholder="Pilih tgl kembali"
+                  align="right"
+                />
               </div>
               <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-foreground/70">Status Awal</label>
-                <select value={formData.initialStatus} onChange={e=>setFormData({...formData, initialStatus: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none">
-                  <option value="pending">Menunggu Approval (Pending)</option>
-                  <option value="approved">Disetujui (Menunggu Diambil)</option>
-                  <option value="active">Sedang Dipinjam (Active)</option>
-                  <option value="returned">Selesai (Returned)</option>
-                </select>
+                <CustomSelect
+                  value={formData.initialStatus}
+                  onChange={(val) => setFormData({ ...formData, initialStatus: val })}
+                  options={[
+                    { value: 'pending', label: 'Menunggu Approval (Pending)', description: 'Masuk antrean persetujuan' },
+                    { value: 'approved', label: 'Disetujui (Menunggu Diambil)', description: 'Siap diambil & cetak SPA' },
+                    { value: 'active', label: 'Sedang Dipinjam (Active)', description: 'Barang sudah dibawa peminjam' },
+                    { value: 'returned', label: 'Selesai (Returned)', description: 'Sudah dikembalikan ke inventaris' }
+                  ]}
+                />
               </div>
             </div>
           </div>

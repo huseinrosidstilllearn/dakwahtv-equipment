@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { 
   X, Calendar as CalendarIcon, User, CreditCard, Smartphone, 
-  Briefcase, FileText, AlertTriangle, Info, ShoppingBag, Trash2, CheckCircle2 
+  Briefcase, FileText, AlertTriangle, Info, ShoppingBag, Trash2, CheckCircle2,
+  MapPin
 } from 'lucide-react';
+import CustomSelect from './ui/CustomSelect';
+import CustomDatePicker from './ui/CustomDatePicker';
 
 export default function CartModal({ 
   isOpen, 
@@ -18,6 +21,37 @@ export default function CartModal({
   checkDateConflicts 
 }) {
   const [origin, setOrigin] = useState('internal');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const handleStartDateChange = (val) => {
+    setStartDate(val);
+    let currentEnd = endDate;
+    if (endDate && val && val > endDate) {
+      currentEnd = val;
+      setEndDate(val);
+    }
+    const conflicts = checkDateConflicts(val, currentEnd);
+    if (conflicts && conflicts.length > 0) {
+      setConflictWarn({ hasConflict: true, conflictItems: conflicts });
+    } else if (val && currentEnd) {
+      setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
+    } else {
+      setConflictWarn(null);
+    }
+  };
+
+  const handleEndDateChange = (val) => {
+    setEndDate(val);
+    const conflicts = checkDateConflicts(startDate, val);
+    if (conflicts && conflicts.length > 0) {
+      setConflictWarn({ hasConflict: true, conflictItems: conflicts });
+    } else if (startDate && val) {
+      setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
+    } else {
+      setConflictWarn(null);
+    }
+  };
   
   if (!isOpen) return null;
 
@@ -171,15 +205,16 @@ export default function CartModal({
                 <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
                   Asal Peminjam
                 </label>
-                <select 
-                  name="origin" 
-                  value={origin} 
-                  onChange={(e) => setOrigin(e.target.value)} 
-                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary text-xs transition-all font-medium cursor-pointer"
-                >
-                  <option value="internal">Internal Dakwah TV</option>
-                  <option value="eksternal">Eksternal (UKM lain / Fakultas Dakwah)</option>
-                </select>
+                <CustomSelect
+                  name="origin"
+                  value={origin}
+                  onChange={setOrigin}
+                  options={[
+                    { value: 'internal', label: 'Internal Dakwah TV', description: 'Kru & pengurus aktif Dakwah TV' },
+                    { value: 'eksternal', label: 'Eksternal (UKM / Fakultas)', description: 'Peminjam luar divisi / ormawa lain' }
+                  ]}
+                  icon={Briefcase}
+                />
               </div>
               
               {origin === 'eksternal' && (
@@ -235,53 +270,40 @@ export default function CartModal({
                   name="purpose" 
                   rows="2" 
                   placeholder="Sebutkan kegiatan syuting atau proker dengan jelas..." 
-                  className="w-full bg-muted/40 border border-border rounded-xl p-3 focus:outline-none focus:border-primary text-xs transition-all resize-none"
+                  className="w-full bg-muted/40 border border-border rounded-xl p-3 focus:outline-none focus:border-primary text-xs transition-all resize-none" 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
                     Tgl Ambil
                   </label>
-                  <input 
-                    name="start" 
-                    type="date" 
-                    required 
-                    onChange={(e) => {
-                      const endInput = e.target.form?.end;
-                      const conflicts = checkDateConflicts(e.target.value, endInput?.value);
-                      if (conflicts && conflicts.length > 0) {
-                        setConflictWarn({ hasConflict: true, conflictItems: conflicts });
-                      } else if (e.target.value && endInput?.value) {
-                        setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
-                      } else {
-                        setConflictWarn(null);
-                      }
-                    }}
-                    className="w-full bg-muted/40 border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-primary text-xs transition-all cursor-pointer" 
+                  <CustomDatePicker
+                    name="start"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    placeholder="Pilih tgl ambil"
+                    rangeStart={startDate}
+                    rangeEnd={endDate}
+                    required
+                    align="left"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
                     Tgl Kembali
                   </label>
-                  <input 
-                    name="end" 
-                    type="date" 
-                    required 
-                    onChange={(e) => {
-                      const startInput = e.target.form?.start;
-                      const conflicts = checkDateConflicts(startInput?.value, e.target.value);
-                      if (conflicts && conflicts.length > 0) {
-                        setConflictWarn({ hasConflict: true, conflictItems: conflicts });
-                      } else if (startInput?.value && e.target.value) {
-                        setConflictWarn({ hasConflict: false, message: '✅ Tanggal tersedia.' });
-                      } else {
-                        setConflictWarn(null);
-                      }
-                    }}
-                    className="w-full bg-muted/40 border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-primary text-xs transition-all cursor-pointer" 
+                  <CustomDatePicker
+                    name="end"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    minDate={startDate}
+                    rangeStart={startDate}
+                    rangeEnd={endDate}
+                    placeholder="Pilih tgl kembali"
+                    required
+                    align="right"
                   />
                 </div>
               </div>
@@ -316,7 +338,7 @@ export default function CartModal({
             <div className="pt-3 flex flex-col gap-2">
               <button 
                 type="submit" 
-                disabled={isSubmitting || (conflictWarn && conflictWarn.hasConflict) || cart.length === 0} 
+                disabled={isSubmitting || (conflictWarn && conflictWarn.hasConflict) || cart.length === 0 || !startDate || !endDate} 
                 className="w-full py-3 bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer shadow-md shadow-primary/20"
               >
                 {isSubmitting ? 'Mengirim Data Pengajuan...' : 'Kirim Permintaan Booking'}

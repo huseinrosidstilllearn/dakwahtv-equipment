@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, Camera, RefreshCw, CheckCircle2, AlertTriangle, ArrowRight, Package, Upload } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import CustomSelect from './ui/CustomSelect';
 
 /**
  * QR Code Scanner Modal using html5-qrcode
@@ -242,17 +243,16 @@ export default function QrScannerModal({ isOpen, onClose, inventory = [], bookin
               {/* Camera Switcher & File Upload */}
               <div className="flex items-center justify-between gap-2 pt-1">
                 {cameras.length > 1 && (
-                  <select
+                  <CustomSelect
                     value={selectedCameraId || ''}
-                    onChange={(e) => startCamera(e.target.value)}
-                    className="text-xs bg-muted border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none"
-                  >
-                    {cameras.map(cam => (
-                      <option key={cam.id} value={cam.id}>
-                        📷 {cam.label || `Kamera ${cam.id.slice(0, 5)}`}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => startCamera(val)}
+                    options={cameras.map(cam => ({
+                      value: cam.id,
+                      label: cam.label || `Kamera ${cam.id.slice(0, 5)}`
+                    }))}
+                    icon={Camera}
+                    className="min-w-[180px]"
+                  />
                 )}
 
                 <div className="flex items-center gap-2 ml-auto">

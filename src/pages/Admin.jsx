@@ -23,6 +23,8 @@ import ManualBookingModal from '../components/ManualBookingModal';
 import QrCodeModal from '../components/QrCodeModal';
 import QrScannerModal from '../components/QrScannerModal';
 import { ShinyButton } from '../components/ui/shiny-button';
+import CustomSelect from '../components/ui/CustomSelect';
+import CustomDatePicker from '../components/ui/CustomDatePicker';
 import { useToast } from '../context/ToastContext';
 import { getSavedTheme, applyTheme } from '../utils/theme';
 
@@ -3273,24 +3275,27 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Pilih Dari Inventaris (Opsional)</label>
-                    <select 
-                      value={serviceFormData.alatId} 
-                      onChange={e => {
-                        const selectedId = e.target.value;
+                    <CustomSelect
+                      value={serviceFormData.alatId}
+                      onChange={(selectedId) => {
                         const found = inventory.find(i => i.id === selectedId);
                         setServiceFormData({
                           ...serviceFormData,
                           alatId: selectedId,
                           namaAlat: found ? found.name : serviceFormData.namaAlat
                         });
-                      }} 
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm mb-3"
-                    >
-                      <option value="">-- Pilih dari daftar alat inventaris --</option>
-                      {inventory.map(i => (
-                        <option key={i.id} value={i.id}>{i.name} ({i.cat || 'Alat'}) - Status: {i.status}</option>
-                      ))}
-                    </select>
+                      }}
+                      placeholder="-- Pilih dari daftar alat inventaris --"
+                      options={[
+                        { value: '', label: '-- Kosongkan (Ketik Manual Di Bawah) --' },
+                        ...inventory.map(i => ({
+                          value: i.id,
+                          label: `${i.name} (${i.cat || 'Alat'})`,
+                          description: `Status: ${i.status}`
+                        }))
+                      ]}
+                      className="mb-3"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Nama Alat Fisik <span className="text-destructive">*</span></label>
@@ -3306,36 +3311,38 @@ export default function Admin() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Tanggal Masuk Servis <span className="text-destructive">*</span></label>
-                      <input 
-                        type="date" 
-                        required
-                        value={serviceFormData.dateIn} 
-                        onChange={e => setServiceFormData({...serviceFormData, dateIn: e.target.value})} 
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm" 
+                      <CustomDatePicker
+                        value={serviceFormData.dateIn}
+                        onChange={(val) => setServiceFormData({...serviceFormData, dateIn: val})}
+                        allowPast={true}
+                        placeholder="Pilih tgl masuk servis"
+                        align="left"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Estimasi / Tgl Selesai</label>
-                      <input 
-                        type="date" 
-                        value={serviceFormData.dateEst} 
-                        onChange={e => setServiceFormData({...serviceFormData, dateEst: e.target.value})} 
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm" 
+                      <CustomDatePicker
+                        value={serviceFormData.dateEst}
+                        onChange={(val) => setServiceFormData({...serviceFormData, dateEst: val})}
+                        allowPast={true}
+                        minDate={serviceFormData.dateIn}
+                        placeholder="Pilih estimasi selesai"
+                        align="right"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Status Servis</label>
-                      <select 
-                        value={serviceFormData.status} 
-                        onChange={e => setServiceFormData({...serviceFormData, status: e.target.value})} 
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm"
-                      >
-                        <option value="Sedang Dikerjakan (In Repair)">Sedang Dikerjakan (In Repair)</option>
-                        <option value="Selesai">Selesai</option>
-                        <option value="Batal">Batal</option>
-                      </select>
+                      <CustomSelect
+                        value={serviceFormData.status}
+                        onChange={(val) => setServiceFormData({...serviceFormData, status: val})}
+                        options={[
+                          { value: 'Sedang Dikerjakan (In Repair)', label: 'Sedang Dikerjakan (In Repair)' },
+                          { value: 'Selesai', label: 'Selesai' },
+                          { value: 'Batal', label: 'Batal' }
+                        ]}
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Biaya Servis (Rp)</label>

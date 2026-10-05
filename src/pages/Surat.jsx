@@ -26,6 +26,7 @@ import {
   X
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
+import CustomDatePicker from '../components/ui/CustomDatePicker';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { 
@@ -1322,11 +1323,11 @@ export default function Surat() {
                       </div>
                       <div>
                         <label className="text-xs font-mono text-foreground/60 mb-1.5 block">Tanggal Produksi</label>
-                        <input 
-                          type="date" 
-                          className="w-full bg-[#f8fafc] dark:bg-[#0c171d] border border-border rounded-xl p-3 text-sm text-foreground focus:border-teal focus:ring-1 focus:ring-teal outline-none transition-colors"
-                          value={formData.tglProduksi} 
-                          onChange={e => setFormData({...formData, tglProduksi: e.target.value})} 
+                        <CustomDatePicker
+                          value={formData.tglProduksi}
+                          onChange={(val) => setFormData({...formData, tglProduksi: val})}
+                          allowPast={true}
+                          placeholder="Pilih tanggal produksi"
                         />
                       </div>
                     </div>
