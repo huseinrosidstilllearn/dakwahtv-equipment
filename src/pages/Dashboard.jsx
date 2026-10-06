@@ -181,8 +181,8 @@ export default function Dashboard() {
       const uEmail = user.email ? user.email.trim().toLowerCase() : '';
       const uName = (user.displayName || user.user_metadata?.name || '').trim().toLowerCase();
 
-      // With Supabase, we can just fetch all bookings for this user using OR conditions
-      let query = supabase.from('bookings').select('*, booking_items(inventory(*))');
+      // Scope query directly to current authenticated user UID
+      let query = supabase.from('bookings').select('*, booking_items(inventory(*))').eq('uid', user.id);
       
       const { data, error } = await query;
       

@@ -16,10 +16,33 @@ export async function onRequestPost(context) {
     const body = await context.request.json().catch(() => ({}));
     const { text, chatId, botToken, parseMode = 'Markdown' } = body;
 
+    // Restrict origin to legitimate Dakwah TV domains
+    const origin = context.request.headers.get('Origin') || '';
+    const isAllowedOrigin = 
+      !origin || 
+      origin.includes('dakwahtvequipment.pages.dev') || 
+      origin.includes('dakwahtv.my.id') || 
+      origin.includes('localhost') || 
+      origin.includes('127.0.0.1');
+
+    if (!isAllowedOrigin) {
+      return new Response(JSON.stringify({ ok: false, error: 'Akses ditolak (Origin tidak diizinkan).' }), {
+        status: 403,
+        headers: corsHeaders
+      });
+    }
+
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({
         ok: false,
         error: 'Isi pesan teks tidak boleh kosong.'
+      }), { status: 400, headers: corsHeaders });
+    }
+
+    if (String(text).length > 3000) {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: 'Pesan melebihi batas panjang maksimum.'
       }), { status: 400, headers: corsHeaders });
     }
 

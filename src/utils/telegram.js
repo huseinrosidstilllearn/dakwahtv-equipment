@@ -111,6 +111,16 @@ export async function testTelegramBotConnection(botToken, chatId) {
 }
 
 /**
+ * Sanitize text to prevent Telegram Markdown V1 parse errors or link injection
+ * @param {string} text 
+ * @returns {string} Sanitized string
+ */
+export function escapeTgMd(text) {
+  if (!text) return '-';
+  return String(text).replace(/([_*[\]()~`>#+=|{}.!])/g, '\\$1');
+}
+
+/**
  * Format new booking alert for Telegram broadcast
  * @param {Object} booking Booking details
  * @param {Array} items List of borrowed items
@@ -119,15 +129,20 @@ export async function testTelegramBotConnection(botToken, chatId) {
 export function formatBookingTelegramMessage(booking, items = []) {
   const fmtDate = (dStr) => dStr ? dStr.split('-').reverse().join('/') : '-';
   const itemListText = items && items.length > 0
-    ? items.map((it, idx) => `  ${idx + 1}. *${it.name || it.item_name || 'Alat'}* (${it.category || it.kategori || 'Unit'})`).join('\n')
+    ? items.map((it, idx) => `  ${idx + 1}. *${escapeTgMd(it.name || it.item_name || 'Alat')}* (${escapeTgMd(it.category || it.kategori || 'Unit')})`).join('\n')
     : '  _(Daftar alat tercantum di sistem)_';
+
+  const bId = escapeTgMd(booking.id || '-');
+  const bUser = escapeTgMd(booking.userName || booking.name || '-');
+  const bDept = escapeTgMd(booking.userDept || booking.dept || '-');
+  const bPhone = escapeTgMd(booking.userPhone || '-');
 
   return `📢 *PENGAJUAN PINJAM ALAT BARU*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🆔 *ID Booking:* \`#${booking.id || '-'}\`\n` +
-    `👤 *Peminjam:* ${booking.userName || booking.name || '-'}\n` +
-    `📺 *Unit/Program:* ${booking.userDept || booking.dept || '-'}\n` +
-    `📱 *WhatsApp:* \`${booking.userPhone || '-'}\`\n` +
+    `🆔 *ID Booking:* \`#${bId}\`\n` +
+    `👤 *Peminjam:* ${bUser}\n` +
+    `📺 *Unit/Program:* ${bDept}\n` +
+    `📱 *WhatsApp:* \`${bPhone}\`\n` +
     `📅 *Periode:* ${fmtDate(booking.dateStart)} s/d ${fmtDate(booking.dateEnd)}\n\n` +
     `📦 *Daftar Peralatan (${items.length} item):*\n` +
     `${itemListText}\n\n` +
@@ -155,11 +170,11 @@ export function formatBookingStatusTelegramMessage({ booking, newStatus, adminEm
 
   return `🔔 *UPDATE STATUS PEMINJAMAN ALAT*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🆔 *ID:* \`#${booking.id || '-'}\`\n` +
-    `👤 *Peminjam:* ${booking.userName || booking.name || '-'}\n` +
-    `📺 *Program:* ${booking.userDept || booking.dept || '-'}\n` +
+    `🆔 *ID:* \`#${escapeTgMd(booking.id || '-')}\`\n` +
+    `👤 *Peminjam:* ${escapeTgMd(booking.userName || booking.name || '-')}\n` +
+    `📺 *Program:* ${escapeTgMd(booking.userDept || booking.dept || '-')}\n` +
     `📌 *Status Baru:* *${label}*\n` +
-    `👮 *Diperbarui Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
+    `👮 *Diperbarui Oleh:* ${adminEmail ? `\`${escapeTgMd(adminEmail)}\`` : 'Admin'}\n` +
     `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`;
 }
 
@@ -177,9 +192,9 @@ export function formatBookingDeletedTelegramMessage({ booking, adminEmail }) {
     return clean.split('-').reverse().join('/');
   };
 
-  const bookingId = booking.id || booking._key || '-';
-  const name = booking.userName || booking.user_name || booking.name || '-';
-  const dept = booking.userDept || booking.dept || '-';
+  const bookingId = escapeTgMd(booking.id || booking._key || '-');
+  const name = escapeTgMd(booking.userName || booking.user_name || booking.name || '-');
+  const dept = escapeTgMd(booking.userDept || booking.dept || '-');
   const startDate = fmtDate(booking.dateStart || booking.date_start || booking.startDate);
   const endDate = fmtDate(booking.dateEnd || booking.date_end || booking.endDate);
   
@@ -187,7 +202,7 @@ export function formatBookingDeletedTelegramMessage({ booking, adminEmail }) {
   const rawItems = booking.items || booking.booking_items;
   if (Array.isArray(rawItems) && rawItems.length > 0) {
     const list = rawItems.map((it, idx) => {
-      const itName = it.name || it.item_name || (it.inventory && it.inventory.name) || 'Alat';
+      const itName = escapeTgMd(it.name || it.item_name || (it.inventory && it.inventory.name) || 'Alat');
       return `  ${idx + 1}. ${itName}`;
     }).slice(0, 5).join('\n');
     const extraCount = rawItems.length > 5 ? `\n  _...dan ${rawItems.length - 5} alat lainnya_` : '';
@@ -201,7 +216,7 @@ export function formatBookingDeletedTelegramMessage({ booking, adminEmail }) {
     `📺 *Program/Unit:* ${dept}\n` +
     `📅 *Jadwal:* ${startDate} s/d ${endDate}\n` +
     `${itemSummary}` +
-    `👮 *Dihapus Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
+    `👮 *Dihapus Oleh:* ${adminEmail ? `\`${escapeTgMd(adminEmail)}\`` : 'Admin'}\n` +
     `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB\n\n` +
     `⚠️ *Keterangan:* Peminjaman telah dihapus permanen oleh admin.`;
 }
@@ -228,17 +243,17 @@ export function formatManualBookingTelegramMessage({ booking, items = [], adminE
     letter_ready: '📄 Siap Diambil'
   };
 
-  const bookingId = booking.id || '-';
-  const name = booking.userName || booking.name || '-';
-  const dept = booking.userDept || booking.dept || '-';
-  const phone = booking.userPhone || booking.phone || '-';
-  const purpose = booking.purpose || '';
+  const bookingId = escapeTgMd(booking.id || '-');
+  const name = escapeTgMd(booking.userName || booking.name || '-');
+  const dept = escapeTgMd(booking.userDept || booking.dept || '-');
+  const phone = escapeTgMd(booking.userPhone || booking.phone || '-');
+  const purpose = escapeTgMd(booking.purpose || '');
   const startDate = fmtDate(booking.dateStart || booking.date_start);
   const endDate = fmtDate(booking.dateEnd || booking.date_end);
   const statusLabel = statusLabels[booking.status] || booking.status || 'Disetujui Langsung';
 
   const itemListText = items && items.length > 0
-    ? items.map((it, idx) => `  ${idx + 1}. *${it.name || it.item_name || 'Alat'}* (${it.category || it.cat || it.kategori || 'Unit'})`).join('\n')
+    ? items.map((it, idx) => `  ${idx + 1}. *${escapeTgMd(it.name || it.item_name || 'Alat')}* (${escapeTgMd(it.category || it.cat || it.kategori || 'Unit')})`).join('\n')
     : '  _(Daftar alat tercantum di sistem)_';
 
   return `📝 *BOOKING MANUAL DIBUAT (ADMIN)*\n` +
@@ -252,7 +267,7 @@ export function formatManualBookingTelegramMessage({ booking, items = [], adminE
     (purpose ? `🎯 *Keperluan:* ${purpose}\n` : '') +
     `\n📦 *Daftar Peralatan (${items.length} item):*\n` +
     `${itemListText}\n\n` +
-    `👮 *Dibuat Oleh:* ${adminEmail ? `\`${adminEmail}\`` : 'Admin'}\n` +
+    `👮 *Dibuat Oleh:* ${adminEmail ? `\`${escapeTgMd(adminEmail)}\`` : 'Admin'}\n` +
     `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB\n\n` +
     `🔗 *Buka Dashboard Admin:*\n` +
     `https://dakwahtvequipment.pages.dev/admin`;

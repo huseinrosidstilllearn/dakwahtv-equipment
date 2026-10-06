@@ -1,4 +1,4 @@
-﻿export async function onRequestPut(context) {
+export async function onRequestPut(context) {
   try {
     const url = new URL(context.request.url);
     const filename = url.searchParams.get('filename');
@@ -9,7 +9,15 @@
       });
     }
 
-    const cleanName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const cleanName = filename.replace(/\.\./g, '').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const contentLength = parseInt(context.request.headers.get('content-length') || '0', 10);
+    if (contentLength > 15 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: 'Ukuran PDF melebihi batas maksimum 15MB' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const bearer = context.env.R2_WORKER_AUTH || 'Bearer DakwahTV_Aman_2026';
     const uploadUrl = `https://equipment-photo-uploader.dakwahtvteknis.workers.dev/spa-pdfs/${cleanName}`;
 

@@ -25,12 +25,41 @@ export async function onRequestPost(context) {
       }), { status: 400, headers: corsHeaders });
     }
 
-    // Validate URL scheme
+    // Validate URL scheme and enforce strict SSRF protection
     let parsedUrl;
     try {
       parsedUrl = new URL(baseUrl);
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
         throw new Error('Protokol harus http:// atau https://');
+      }
+
+      const hostname = parsedUrl.hostname.toLowerCase();
+
+      // Block private/loopback IP addresses and cloud metadata services
+      const isPrivateOrMetadata = 
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '0.0.0.0' ||
+        hostname === '::1' ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.') ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+        hostname.endsWith('.internal') ||
+        hostname.endsWith('.local');
+
+      // Allowlist legitimate Gotenberg servers
+      const isAllowedDomain = 
+        hostname.endsWith('dakwahtv.my.id') ||
+        hostname.endsWith('dakwahtv.com') ||
+        hostname.endsWith('gotenberg.dev') ||
+        (context.env.ALLOWED_GOTENBERG_HOST && hostname === context.env.ALLOWED_GOTENBERG_HOST.toLowerCase());
+
+      if (isPrivateOrMetadata || !isAllowedDomain) {
+        return new Response(JSON.stringify({
+          ok: false,
+          error: `Akses ditolak: Host ${hostname} tidak diizinkan demi keamanan (SSRF Protection). Gunakan domain resmi Gotenberg.`
+        }), { status: 403, headers: corsHeaders });
       }
     } catch (urlErr) {
       return new Response(JSON.stringify({

@@ -2,8 +2,33 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
     const { target, message, countryCode = '62' } = body;
-    if (!target || !message) {
-      return new Response(JSON.stringify({ status: false, message: 'Target and message required' }), {
+    // Restrict origin to legitimate Dakwah TV domains
+    const origin = context.request.headers.get('Origin') || '';
+    const isAllowedOrigin = 
+      !origin || 
+      origin.includes('dakwahtvequipment.pages.dev') || 
+      origin.includes('dakwahtv.my.id') || 
+      origin.includes('localhost') || 
+      origin.includes('127.0.0.1');
+
+    if (!isAllowedOrigin) {
+      return new Response(JSON.stringify({ status: false, message: 'Akses ditolak (Origin tidak diizinkan)' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const cleanTarget = String(target).trim();
+    const isValidTarget = /^[0-9+]{8,18}$/.test(cleanTarget) || cleanTarget.endsWith('@g.us');
+    if (!isValidTarget) {
+      return new Response(JSON.stringify({ status: false, message: 'Format nomor target WhatsApp tidak valid' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (String(message).length > 2500) {
+      return new Response(JSON.stringify({ status: false, message: 'Pesan melebihi batas panjang maksimum' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });

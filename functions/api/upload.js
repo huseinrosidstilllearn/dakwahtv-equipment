@@ -1,4 +1,4 @@
-﻿export async function onRequest(context) {
+export async function onRequest(context) {
   const { request, env } = context;
   const method = request.method;
 
@@ -14,6 +14,14 @@
 
   const bearer = env.R2_WORKER_AUTH || 'Bearer DakwahTV_Aman_2026';
   const workerBase = 'https://equipment-photo-uploader.dakwahtvteknis.workers.dev';
+
+  const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+  if (contentLength > 15 * 1024 * 1024) {
+    return new Response(JSON.stringify({ error: 'Ukuran berkas melebihi batas maksimum 15MB' }), {
+      status: 413,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 
   try {
     if (method === 'POST') {
@@ -33,7 +41,7 @@
     } else if (method === 'PUT') {
       const url = new URL(request.url);
       const pathParam = url.searchParams.get('path') || '';
-      const cleanPath = pathParam.replace(/[^a-zA-Z0-9._/-]/g, '_');
+      const cleanPath = pathParam.replace(/\.\./g, '').replace(/[^a-zA-Z0-9._/-]/g, '_');
       const targetUrl = cleanPath ? `${workerBase}/${cleanPath}` : workerBase;
 
       const bodyBuffer = await request.arrayBuffer();

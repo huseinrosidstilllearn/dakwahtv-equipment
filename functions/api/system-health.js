@@ -77,7 +77,18 @@ export async function onRequest(context) {
 
     // 2. GOTENBERG PDF CONVERTER
     (async () => {
-      const base = customGotenberg || 'https://gotenberg.dakwahtv.my.id';
+      let base = 'https://gotenberg.dakwahtv.my.id';
+      if (customGotenberg) {
+        try {
+          const parsed = new URL(customGotenberg);
+          const h = parsed.hostname.toLowerCase();
+          const isAllowed = h.endsWith('dakwahtv.my.id') || h.endsWith('dakwahtv.com') || h.endsWith('gotenberg.dev');
+          const isLoopback = ['localhost', '127.0.0.1', '0.0.0.0'].includes(h) || h.startsWith('10.') || h.startsWith('192.168.') || h.startsWith('169.254.');
+          if (isAllowed && !isLoopback) {
+            base = customGotenberg;
+          }
+        } catch (_) {}
+      }
       const clean = base.replace(/\/+$/, '');
       const check = await timeoutFetch(`${clean}/health`);
       let details = {};

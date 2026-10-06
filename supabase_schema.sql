@@ -166,7 +166,11 @@ create policy "Admin delete booking items" on booking_items for delete using (
 
 -- Config Policies
 drop policy if exists "Config is public" on config;
-create policy "Config is public" on config for select using (true);
+drop policy if exists "Public reads non-sensitive config" on config;
+create policy "Public reads non-sensitive config" on config for select using (
+  key in ('maintenanceMode', 'announcement', 'waTemplates', 'gotenbergUrl', 'telegramEnabled') or
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
 
 drop policy if exists "Admin updates config" on config;
 create policy "Admin updates config" on config for all using (

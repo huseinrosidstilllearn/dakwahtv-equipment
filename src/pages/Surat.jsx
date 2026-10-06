@@ -190,22 +190,24 @@ export default function Surat() {
         }
       }
 
-      // 4. Query all bookings if direct lookup fails or if no ID specified (works if logged in or admin)
-      const { data: allData } = await supabase.from('bookings').select('*, booking_items(inventory(*))');
-      if (allData && allData.length > 0) {
-        const list = allData.map(normalizeBooking).filter(Boolean);
-        list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-        setAllBookings(prev => {
-          const map = new Map();
-          [...list, ...prev].forEach(item => { if (item.id) map.set(item.id, item); });
-          return Array.from(map.values());
-        });
+      // 4. Query all bookings ONLY if logged in as Admin (for admin booking selector dropdown)
+      if (isAdmin) {
+        const { data: allData } = await supabase.from('bookings').select('*, booking_items(inventory(*))');
+        if (allData && allData.length > 0) {
+          const list = allData.map(normalizeBooking).filter(Boolean);
+          list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          setAllBookings(prev => {
+            const map = new Map();
+            [...list, ...prev].forEach(item => { if (item.id) map.set(item.id, item); });
+            return Array.from(map.values());
+          });
 
-        if (id) {
-          const found = list.find(b => b.id === id || b._key === id);
-          if (found) {
-            setBooking(found);
-            initForm(found);
+          if (id) {
+            const found = list.find(b => b.id === id || b._key === id);
+            if (found) {
+              setBooking(found);
+              initForm(found);
+            }
           }
         }
       }
@@ -529,6 +531,10 @@ export default function Surat() {
 
   const handleAdminApprove = async () => {
     if (!booking) return;
+    if (!isAdmin) {
+      alert("Akses ditolak: Hanya akun Administrator yang berhak menyetujui peminjaman alat.");
+      return;
+    }
     const bId = booking.id || booking._key;
     const isConfirmed = window.confirm(`Setujui booking #${bId} dan kirim surat PDF resmi ke WhatsApp peminjam?`);
     if (!isConfirmed) return;
@@ -914,7 +920,7 @@ export default function Surat() {
           )}
 
           {/* Admin Review & Approval Banner */}
-          {(isAdmin || window.location.pathname.includes('/admin/surat')) && booking.status === 'pending' && (
+          {isAdmin && booking.status === 'pending' && (
             <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-foreground shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-in fade-in-50">
               <div>
                 <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 text-sm">
@@ -947,7 +953,7 @@ export default function Surat() {
           )}
 
           {/* Admin Approved Notice */}
-          {(isAdmin || window.location.pathname.includes('/admin/surat')) && (booking.status === 'approved' || booking.status === 'disetujui') && (
+          {isAdmin && (booking.status === 'approved' || booking.status === 'disetujui') && (
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-foreground flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />

@@ -18,6 +18,8 @@ const BK_STATUS_LABEL = {
   returned_late: "Dikembalikan (Terlambat)"
 };
 
+const isSafeUrl = (url) => typeof url === 'string' && /^(https?:\/\/|\/|data:image\/)/i.test(url.trim());
+
 export default function BookingDetailModal({ booking: rawBooking, onClose, onApprove, onReject, onGenerateLetter, onMarkLetterReady, onMarkPickedUp, onMarkReturned }) {
   const { toast } = useToast();
   const booking = normalizeBooking(rawBooking);
@@ -320,10 +322,14 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
           {booking.userOrigin === 'eksternal' && (
              <div>
                 <h4 className="font-mono text-[10px] text-teal tracking-widest uppercase mb-3">DOKUMEN PENDUKUNG (EKSTERNAL)</h4>
-                {booking.supportingDocUrl ? (
-                   <a href={booking.supportingDocUrl} target="_blank" rel="noreferrer" className="block w-24 h-24 border border-border rounded overflow-hidden hover:border-teal transition-colors">
+                {booking.supportingDocUrl && isSafeUrl(booking.supportingDocUrl) ? (
+                   <a href={booking.supportingDocUrl} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 border border-border rounded overflow-hidden hover:border-teal transition-colors">
                      <img src={booking.supportingDocUrl} alt="Dokumen pendukung" className="w-full h-full object-cover" />
                    </a>
+                ) : booking.supportingDocUrl ? (
+                   <div className="text-destructive text-xs flex items-center gap-2">
+                     <AlertTriangle className="w-4 h-4" /> Tautan dokumen tidak aman atau tidak valid.
+                   </div>
                 ) : (
                    <div className="text-destructive text-xs flex items-center gap-2">
                      <XCircle className="w-4 h-4" /> Belum ada dokumen diunggah.
