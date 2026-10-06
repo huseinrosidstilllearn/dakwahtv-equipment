@@ -181,7 +181,7 @@ export default function Katalog() {
   // URL Parameter System
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const itemParam = params.get('item');
+    const itemParam = params.get('item') || params.get('search') || params.get('q');
     if (itemParam) setSearchQuery(itemParam);
     const loginParam = params.get('login');
     if (loginParam === 'true') setIsAuthOpen(true);
