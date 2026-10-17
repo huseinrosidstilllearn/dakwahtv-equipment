@@ -106,42 +106,47 @@ const HeroSection = React.forwardRef(
               <p className="max-w-2xl mx-auto text-foreground/70 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg leading-relaxed px-2">
                 {description}
               </p>
-              <div className="items-center justify-center gap-x-3 space-y-3 sm:flex sm:space-y-0 mt-6 sm:mt-8 mb-6 sm:mb-12">
-                <span className="relative inline-block overflow-hidden rounded-full p-[2px]">
+              <div className="flex flex-col items-center justify-center mt-6 sm:mt-8">
+                <span className="relative inline-block overflow-hidden rounded-full p-[2px] shadow-lg shadow-primary/20">
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,#26a695_50%,transparent_100%)]" />
                   <div className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-background backdrop-blur-3xl">
                     <a
                       href={ctaHref}
-                      className="relative overflow-hidden inline-flex rounded-full text-center group items-center w-full justify-center bg-gradient-to-tr from-primary/10 via-primary/20 to-transparent border-input border-[1px] transition-all sm:w-auto py-5 px-12 text-base md:text-lg font-bold animate-color-cycle tracking-wide hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background hover:scale-[1.02]"
+                      className="relative overflow-hidden inline-flex rounded-full text-center group items-center justify-center bg-gradient-to-tr from-primary/10 via-primary/20 to-transparent border-input border-[1px] transition-all py-3.5 px-8 sm:py-4 sm:px-12 text-sm sm:text-base md:text-lg font-bold whitespace-nowrap animate-color-cycle tracking-wide hover:ring-2 hover:ring-primary/50 hover:ring-offset-2 hover:ring-offset-background hover:scale-[1.02]"
                     >
-                      <span className="relative z-10">{ctaText}</span>
+                      <span className="relative z-10 flex items-center gap-2">
+                        {ctaText}
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </span>
                       <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <div className="absolute inset-0 -z-10 w-full translate-x-[-100%] animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                     </a>
                   </div>
                 </span>
               </div>
+
+              {/* Dynamic Scroll Indicator */}
+              <div 
+                className="mt-8 sm:mt-12 flex flex-col items-center cursor-pointer opacity-70 hover:opacity-100 transition-opacity select-none group" 
+                onClick={() => {
+                  const el = document.getElementById('menu-cards') || document.getElementById('catalog');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    window.scrollTo({ top: window.innerHeight * 0.9, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <span className="text-[10px] font-bold tracking-[0.3em] text-primary mb-2 uppercase animate-pulse group-hover:text-emerald-400 transition-colors">
+                  Eksplor
+                </span>
+                <div className="w-5 h-8 sm:w-6 sm:h-10 rounded-full border-2 border-primary/30 group-hover:border-primary/60 flex justify-center p-1 transition-colors">
+                  <div className="w-1.5 h-2 sm:h-2.5 bg-primary rounded-full animate-bounce" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
-
-        {/* Dynamic Scroll Indicator */}
-        <div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center cursor-pointer opacity-70 hover:opacity-100 transition-opacity" 
-          onClick={() => {
-            const el = document.getElementById('menu-cards');
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth' });
-            } else {
-              window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-            }
-          }}
-        >
-          <span className="text-[10px] font-bold tracking-[0.3em] text-primary mb-2 uppercase animate-pulse">Eksplor</span>
-          <div className="w-6 h-10 rounded-full border-2 border-primary/30 flex justify-center p-1">
-            <div className="w-1.5 h-2.5 bg-primary rounded-full animate-bounce" />
-          </div>
-        </div>
       </div>
     )
   },
