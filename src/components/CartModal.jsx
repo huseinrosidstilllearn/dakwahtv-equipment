@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { 
   X, Calendar as CalendarIcon, User, CreditCard, Smartphone, 
   Briefcase, FileText, AlertTriangle, Info, ShoppingBag, Trash2, CheckCircle2,
-  ChevronDown, Building, ArrowRight
+  ChevronDown, Building, ArrowRight, Hash
 } from 'lucide-react';
 import { KEPERLUAN_OPTIONS, getKeperluanConfig } from '../utils/keperluan';
+import CustomSelect from './ui/CustomSelect';
+import IndonesianDatePicker from './ui/IndonesianDatePicker';
 
 function formatHumanDate(dateStr) {
   if (!dateStr) return '';
@@ -218,19 +220,35 @@ export default function CartModal({
                       </div>
                     </div>
                     
+                    {/* NIM / NIC Field with Dynamic Label & Helper */}
                     <div>
-                      <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
-                        NIM / NIC Dakwah TV
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-mono text-foreground/70 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                          {origin === 'internal' ? 'NIC Dakwah TV (Nomor Induk Crew)' : 'NIM / NIK / No. Identitas'}
+                          <span className="text-destructive">*wajib</span>
+                        </label>
+                        <span className="text-[9px] font-mono text-teal bg-teal/10 px-1.5 py-0.5 rounded font-semibold uppercase">
+                          {origin === 'internal' ? 'Kru Dakwah TV' : 'Eksternal'}
+                        </span>
+                      </div>
                       <div className="relative">
-                        <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none text-foreground/40">
+                          {origin === 'internal' ? <Hash className="w-4 h-4 text-teal" /> : <CreditCard className="w-4 h-4" />}
+                        </div>
                         <input 
+                          key={origin}
                           name="nim" 
                           required 
-                          placeholder="Nomor Induk Mahasiswa / NIC"
-                          className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-teal text-xs transition-all font-medium" 
+                          defaultValue={currentUser?.nim || currentUser?.user_metadata?.nim || ""}
+                          placeholder={origin === 'internal' ? 'Contoh: DTV-024 atau 2024xxx' : 'Nomor Induk Mahasiswa / NIK KTP'}
+                          className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-teal text-xs transition-all font-medium font-mono" 
                         />
                       </div>
+                      <p className="text-[10px] text-foreground/50 mt-1 leading-snug">
+                        {origin === 'internal' 
+                          ? '*Nomor Induk Crew resmi Dakwah TV untuk pencatatan inventaris internal.' 
+                          : '*Nomor Induk Mahasiswa atau NIK KTP penanggung jawab kegiatan.'}
+                      </p>
                     </div>
 
                     <div>
@@ -243,6 +261,7 @@ export default function CartModal({
                           name="phone" 
                           type="tel" 
                           required
+                          defaultValue={currentUser?.phone || currentUser?.user_metadata?.phone || ""}
                           placeholder="08xxxxxxxxxx" 
                           className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-teal text-xs transition-all font-medium" 
                         />
@@ -307,29 +326,26 @@ export default function CartModal({
 
                   <div className="space-y-3 bg-muted/20 border border-border/80 rounded-2xl p-3.5">
                     
-                    {/* Kategori Keperluan (7 Opsi Dropdown Bersih) */}
+                    {/* Kategori Keperluan (Custom Dropdown) */}
                     <div>
                       <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
                         Kategori Keperluan Peminjaman
                       </label>
-                      <div className="relative">
-                        <select
-                          name="category_purpose"
-                          value={keperluanType}
-                          onChange={(e) => {
-                            setKeperluanType(e.target.value);
-                            if (e.target.value === 'eksternal') setOrigin('eksternal');
-                          }}
-                          className="w-full bg-background border border-border focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl px-3.5 py-2.5 text-xs text-foreground font-semibold outline-none transition-all cursor-pointer appearance-none pr-9 dark:[color-scheme:dark]"
-                        >
-                          {KEPERLUAN_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value} className="bg-card text-foreground py-1">
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50 pointer-events-none" />
-                      </div>
+                      <CustomSelect
+                        name="category_purpose"
+                        value={keperluanType}
+                        onChange={(val) => {
+                          setKeperluanType(val);
+                          if (val === 'eksternal') setOrigin('eksternal');
+                        }}
+                        options={KEPERLUAN_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                          description: opt.desc,
+                          icon: opt.icon
+                        }))}
+                        placeholder="Pilih Kategori Keperluan..."
+                      />
 
                       {/* Info Badge Kategori */}
                       <div className={`mt-2 p-2.5 rounded-xl border text-[11px] flex items-center gap-2 ${activeKeperluan.badgeColor}`}>
@@ -348,6 +364,7 @@ export default function CartModal({
                         <input 
                           name="dept" 
                           required
+                          defaultValue={currentUser?.dept || ""}
                           placeholder={activeKeperluan.deptPlaceholder || "Misal: Divisi Produksi"} 
                           className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-teal text-xs transition-all font-medium" 
                         />
@@ -368,50 +385,40 @@ export default function CartModal({
                       />
                     </div>
 
-                    {/* Tanggal Ambil & Kembali (Native Styled Clean Pickers) */}
+                    {/* Tanggal Ambil & Kembali (Indonesian Date Pickers DD/MM/YYYY) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
                         <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
-                          Tanggal Ambil
+                          Tanggal Ambil (DD/MM/YYYY)
                         </label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            name="start"
-                            required
-                            min={todayStr}
-                            value={startDate}
-                            onChange={(e) => handleStartDateChange(e.target.value)}
-                            className="w-full bg-background border border-border focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl px-3.5 py-2.5 text-xs text-foreground font-semibold outline-none transition-all cursor-pointer dark:[color-scheme:dark]"
-                          />
-                        </div>
-                        {startDate && (
-                          <span className="text-[10px] font-mono text-teal font-semibold block mt-1">
-                            {formatHumanDate(startDate)}
-                          </span>
-                        )}
+                        <IndonesianDatePicker
+                          name="start"
+                          value={startDate}
+                          onChange={(val) => handleStartDateChange(val)}
+                          minDate={todayStr}
+                          rangeStart={startDate}
+                          rangeEnd={endDate}
+                          required
+                          placeholder="Pilih tgl ambil"
+                          align="left"
+                        />
                       </div>
 
                       <div>
                         <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
-                          Tanggal Kembali
+                          Tanggal Kembali (DD/MM/YYYY)
                         </label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            name="end"
-                            required
-                            min={startDate || todayStr}
-                            value={endDate}
-                            onChange={(e) => handleEndDateChange(e.target.value)}
-                            className="w-full bg-background border border-border focus:border-teal focus:ring-2 focus:ring-teal/20 rounded-xl px-3.5 py-2.5 text-xs text-foreground font-semibold outline-none transition-all cursor-pointer dark:[color-scheme:dark]"
-                          />
-                        </div>
-                        {endDate && (
-                          <span className="text-[10px] font-mono text-teal font-semibold block mt-1">
-                            {formatHumanDate(endDate)}
-                          </span>
-                        )}
+                        <IndonesianDatePicker
+                          name="end"
+                          value={endDate}
+                          onChange={(val) => handleEndDateChange(val)}
+                          minDate={startDate || todayStr}
+                          rangeStart={startDate}
+                          rangeEnd={endDate}
+                          required
+                          placeholder="Pilih tgl kembali"
+                          align="right"
+                        />
                       </div>
                     </div>
                   </div>

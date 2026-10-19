@@ -132,16 +132,43 @@ export default function Katalog() {
   }, []);
 
   useEffect(() => {
+    const syncUser = async (session) => {
+      if (!session?.user) {
+        setCurrentUser(null);
+        setCurrentUserStatus('active');
+        return;
+      }
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        setCurrentUser({
+          ...session.user,
+          ...prof,
+          displayName: prof?.display_name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || '',
+          nim: prof?.nim || session.user.user_metadata?.nim || '',
+          phone: prof?.phone || session.user.user_metadata?.phone || '',
+          dept: prof?.dept || ''
+        });
+        setCurrentUserStatus(prof?.status || 'active');
+      } catch (err) {
+        console.warn("Failed fetching profile in Katalog:", err);
+        setCurrentUser(session.user);
+        setCurrentUserStatus('active');
+      }
+    };
+
     const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setCurrentUser(session?.user || null);
-      setCurrentUserStatus('active');
+      await syncUser(session);
     };
     fetchSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setCurrentUser(session?.user || null);
-      setCurrentUserStatus('active');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      await syncUser(session);
     });
 
     return () => {

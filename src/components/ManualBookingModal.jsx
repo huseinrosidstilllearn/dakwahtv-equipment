@@ -5,6 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { sortCategories } from '../utils/categories';
 import { sendTelegramAlert, formatManualBookingTelegramMessage } from '../utils/telegram';
 import { KEPERLUAN_OPTIONS, getKeperluanConfig, formatPurposeString } from '../utils/keperluan';
+import CustomSelect from './ui/CustomSelect';
+import IndonesianDatePicker from './ui/IndonesianDatePicker';
 
 export default function ManualBookingModal({ isOpen, onClose, inventory, currentUser, telegramConfig, onBookingCreated }) {
   const { toast } = useToast();
@@ -178,8 +180,18 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
                 <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Fulan bin Fulan" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Hash className="w-3 h-3"/> NIM / NIC Dakwah TV</label>
-                <input required type="text" value={formData.nim} onChange={e=>setFormData({...formData, nim: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" placeholder="12345678" />
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1">
+                  <Hash className="w-3 h-3 text-primary"/> 
+                  {formData.origin === 'Internal Dakwah TV' ? 'NIC Dakwah TV (Nomor Induk Crew)' : 'NIM / NIK / No. Identitas'}
+                </label>
+                <input 
+                  required 
+                  type="text" 
+                  value={formData.nim} 
+                  onChange={e=>setFormData({...formData, nim: e.target.value})} 
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none font-mono" 
+                  placeholder={formData.origin === 'Internal Dakwah TV' ? 'Contoh: DTV-024' : 'NIM / NIK KTP'} 
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Phone className="w-3 h-3"/> No WA</label>
@@ -187,17 +199,16 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><MapPin className="w-3 h-3"/> Asal / Status</label>
-                <div className="relative">
-                  <select 
-                    value={formData.origin} 
-                    onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
-                    className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-3 py-2 text-sm text-foreground outline-none appearance-none pr-8 cursor-pointer dark:[color-scheme:dark]"
-                  >
-                    <option value="Internal Dakwah TV">Internal Dakwah TV</option>
-                    <option value="Eksternal">Eksternal</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" />
-                </div>
+                <CustomSelect 
+                  value={formData.origin} 
+                  onChange={(val) => setFormData({ ...formData, origin: val })}
+                  options={[
+                    { value: 'Internal Dakwah TV', label: 'Internal Dakwah TV', description: 'Kru & pengurus aktif Dakwah TV' },
+                    { value: 'Eksternal', label: 'Eksternal', description: 'Peminjam luar divisi / ormawa lain' }
+                  ]}
+                  placeholder="Pilih Asal..."
+                  icon={MapPin}
+                />
               </div>
 
               {/* Kategori Keperluan (7 Opsi) */}
@@ -205,20 +216,18 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1">
                   <FileText className="w-3 h-3 text-primary"/> Kategori Keperluan
                 </label>
-                <div className="relative">
-                  <select 
-                    value={formData.category} 
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-3 py-2 text-sm text-foreground outline-none appearance-none pr-8 cursor-pointer dark:[color-scheme:dark]"
-                  >
-                    {KEPERLUAN_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value} className="bg-card text-foreground">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" />
-                </div>
+                <CustomSelect 
+                  value={formData.category} 
+                  onChange={(val) => setFormData({ ...formData, category: val })}
+                  options={KEPERLUAN_OPTIONS.map(opt => ({
+                    value: opt.value,
+                    label: opt.label,
+                    description: opt.desc,
+                    icon: opt.icon
+                  }))}
+                  placeholder="Pilih Kategori Keperluan..."
+                  icon={FileText}
+                />
                 {keperluanConfig && (
                   <div className={`mt-1.5 p-2 rounded-lg border text-xs flex items-center gap-2 ${keperluanConfig.badgeColor}`}>
                     {React.createElement(keperluanConfig.icon, { className: "w-3.5 h-3.5 shrink-0" })}
@@ -255,46 +264,45 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Ambil</label>
-                <input
-                  type="date"
-                  required
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Ambil (DD/MM/YYYY)</label>
+                <IndonesianDatePicker
                   value={formData.dateStart}
-                  onChange={(e) => {
-                    const val = e.target.value;
+                  onChange={(val) => {
                     let end = formData.dateEnd;
                     if (end && val && val > end) end = val;
                     setFormData({ ...formData, dateStart: val, dateEnd: end });
                   }}
-                  className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-3 py-2 text-sm text-foreground outline-none cursor-pointer dark:[color-scheme:dark]"
+                  placeholder="Pilih tgl ambil"
+                  rangeStart={formData.dateStart}
+                  rangeEnd={formData.dateEnd}
+                  align="left"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Kembali</label>
-                <input
-                  type="date"
-                  required
-                  min={formData.dateStart || undefined}
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Kembali (DD/MM/YYYY)</label>
+                <IndonesianDatePicker
                   value={formData.dateEnd}
-                  onChange={(e) => setFormData({ ...formData, dateEnd: e.target.value })}
-                  className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-3 py-2 text-sm text-foreground outline-none cursor-pointer dark:[color-scheme:dark]"
+                  onChange={(val) => setFormData({ ...formData, dateEnd: val })}
+                  minDate={formData.dateStart}
+                  rangeStart={formData.dateStart}
+                  rangeEnd={formData.dateEnd}
+                  placeholder="Pilih tgl kembali"
+                  align="right"
                 />
               </div>
               <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-foreground/70">Status Awal</label>
-                <div className="relative">
-                  <select
-                    value={formData.initialStatus}
-                    onChange={(e) => setFormData({ ...formData, initialStatus: e.target.value })}
-                    className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-3 py-2 text-sm text-foreground outline-none appearance-none pr-8 cursor-pointer dark:[color-scheme:dark]"
-                  >
-                    <option value="pending">Menunggu Approval (Pending)</option>
-                    <option value="approved">Disetujui (Siap Diambil)</option>
-                    <option value="active">Sedang Dipinjam (Active)</option>
-                    <option value="returned">Selesai (Returned)</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" />
-                </div>
+                <CustomSelect
+                  value={formData.initialStatus}
+                  onChange={(val) => setFormData({ ...formData, initialStatus: val })}
+                  options={[
+                    { value: 'pending', label: 'Menunggu Approval (Pending)', description: 'Masuk antrean persetujuan' },
+                    { value: 'approved', label: 'Disetujui (Siap Diambil)', description: 'Peminjaman disetujui & siap serah terima' },
+                    { value: 'active', label: 'Sedang Dipinjam (Active)', description: 'Barang sudah dibawa peminjam' },
+                    { value: 'returned', label: 'Selesai (Returned)', description: 'Sudah dikembalikan ke inventaris' }
+                  ]}
+                  placeholder="Pilih status awal..."
+                />
                 <p className="text-[11px] text-foreground/50 mt-1 leading-relaxed">
                   * Persetujuan peminjaman langsung aktif. Jika peminjam membutuhkan berkas surat fisik bertanda tangan resmi, proses dilakukan langsung melalui Sekretaris Dakwah TV.
                 </p>

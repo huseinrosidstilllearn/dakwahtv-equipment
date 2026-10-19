@@ -24,6 +24,8 @@ import ManualBookingModal from '../components/ManualBookingModal';
 import QrCodeModal from '../components/QrCodeModal';
 import QrScannerModal from '../components/QrScannerModal';
 import { ShinyButton } from '../components/ui/shiny-button';
+import CustomSelect from '../components/ui/CustomSelect';
+import IndonesianDatePicker from '../components/ui/IndonesianDatePicker';
 import { useToast } from '../context/ToastContext';
 import { getSavedTheme, applyTheme } from '../utils/theme';
 
@@ -3255,29 +3257,27 @@ export default function Admin() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Pilih Dari Inventaris (Opsional)</label>
-                    <div className="relative mb-3">
-                      <select
-                        value={serviceFormData.alatId}
-                        onChange={(e) => {
-                          const selectedId = e.target.value;
-                          const found = inventory.find(i => i.id === selectedId);
-                          setServiceFormData({
-                            ...serviceFormData,
-                            alatId: selectedId,
-                            namaAlat: found ? found.name : serviceFormData.namaAlat
-                          });
-                        }}
-                        className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-3 text-sm text-foreground outline-none appearance-none pr-10 cursor-pointer dark:[color-scheme:dark]"
-                      >
-                        <option value="">-- Kosongkan (Ketik Manual Di Bawah) --</option>
-                        {inventory.map(i => (
-                          <option key={i.id} value={i.id}>
-                            {i.name} ({i.cat || 'Alat'}) - Status: {i.status}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" />
-                    </div>
+                    <CustomSelect
+                      value={serviceFormData.alatId}
+                      onChange={(selectedId) => {
+                        const found = inventory.find(i => i.id === selectedId);
+                        setServiceFormData({
+                          ...serviceFormData,
+                          alatId: selectedId,
+                          namaAlat: found ? found.name : serviceFormData.namaAlat
+                        });
+                      }}
+                      placeholder="-- Pilih dari daftar alat inventaris --"
+                      options={[
+                        { value: '', label: '-- Kosongkan (Ketik Manual Di Bawah) --' },
+                        ...inventory.map(i => ({
+                          value: i.id,
+                          label: `${i.name} (${i.cat || 'Alat'})`,
+                          description: `Status: ${i.status}`
+                        }))
+                      ]}
+                      className="mb-3"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Nama Alat Fisik <span className="text-destructive">*</span></label>
@@ -3292,41 +3292,38 @@ export default function Admin() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Tanggal Masuk Servis <span className="text-destructive">*</span></label>
-                      <input
-                        type="date"
-                        required
+                      <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Tanggal Masuk Servis (DD/MM/YYYY) <span className="text-destructive">*</span></label>
+                      <IndonesianDatePicker
                         value={serviceFormData.dateIn}
-                        onChange={(e) => setServiceFormData({...serviceFormData, dateIn: e.target.value})}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm cursor-pointer dark:[color-scheme:dark]"
+                        onChange={(val) => setServiceFormData({...serviceFormData, dateIn: val})}
+                        placeholder="Pilih tgl masuk servis"
+                        align="left"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Estimasi / Tgl Selesai</label>
-                      <input
-                        type="date"
-                        min={serviceFormData.dateIn || undefined}
+                      <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Estimasi / Tgl Selesai (DD/MM/YYYY)</label>
+                      <IndonesianDatePicker
                         value={serviceFormData.dateEst}
-                        onChange={(e) => setServiceFormData({...serviceFormData, dateEst: e.target.value})}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-mono text-sm cursor-pointer dark:[color-scheme:dark]"
+                        onChange={(val) => setServiceFormData({...serviceFormData, dateEst: val})}
+                        minDate={serviceFormData.dateIn}
+                        placeholder="Pilih estimasi selesai"
+                        align="right"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Status Servis</label>
-                      <div className="relative">
-                        <select
-                          value={serviceFormData.status}
-                          onChange={(e) => setServiceFormData({...serviceFormData, status: e.target.value})}
-                          className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-3 text-sm text-foreground outline-none appearance-none pr-10 cursor-pointer dark:[color-scheme:dark]"
-                        >
-                          <option value="Sedang Dikerjakan (In Repair)">Sedang Dikerjakan (In Repair)</option>
-                          <option value="Selesai">Selesai</option>
-                          <option value="Batal">Batal</option>
-                        </select>
-                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" />
-                      </div>
+                      <CustomSelect
+                        value={serviceFormData.status}
+                        onChange={(val) => setServiceFormData({...serviceFormData, status: val})}
+                        options={[
+                          { value: 'Sedang Dikerjakan (In Repair)', label: 'Sedang Dikerjakan (In Repair)' },
+                          { value: 'Selesai', label: 'Selesai' },
+                          { value: 'Batal', label: 'Batal' }
+                        ]}
+                        placeholder="Pilih status servis..."
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase mb-1.5 font-bold">Biaya Servis (Rp)</label>
