@@ -163,7 +163,7 @@ export function formatBookingStatusTelegramMessage({ booking, newStatus, adminEm
     picked_up: '🎥 SEDANG DIPINJAM (Alat Telah Diambil)',
     returned: '📦 TELAH DIKEMBALIKAN (Selesai)',
     returned_late: '⚠️ DIKEMBALIKAN TERLAMBAT',
-    letter_ready: '📄 SURAT & ALAT SIAP DIAMBIL'
+    letter_ready: '✅ DISETUJUI (Siap Diambil)'
   };
 
   const label = statusLabels[newStatus] || newStatus.toUpperCase();
@@ -172,7 +172,8 @@ export function formatBookingStatusTelegramMessage({ booking, newStatus, adminEm
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `🆔 *ID:* \`#${escapeTgMd(booking.id || '-')}\`\n` +
     `👤 *Peminjam:* ${escapeTgMd(booking.userName || booking.name || '-')}\n` +
-    `📺 *Program:* ${escapeTgMd(booking.userDept || booking.dept || '-')}\n` +
+    `📺 *Unit/Program:* ${escapeTgMd(booking.userDept || booking.dept || '-')}\n` +
+    (booking.purpose ? `🎯 *Keperluan:* ${escapeTgMd(booking.purpose)}\n` : '') +
     `📌 *Status Baru:* *${label}*\n` +
     `👮 *Diperbarui Oleh:* ${adminEmail ? `\`${escapeTgMd(adminEmail)}\`` : 'Admin'}\n` +
     `⏰ *Waktu:* ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`;

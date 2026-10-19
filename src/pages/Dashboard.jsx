@@ -7,11 +7,12 @@ import AuthModal from '../components/AuthModal';
 import { ArrowLeft, Moon, Sun, History, UserCircle, Shield, Bell, CheckCircle2, AlertTriangle, AlertCircle, Calendar, CalendarDays, KeyRound, ArrowRightLeft, LogOut, Menu, X, Mail, BookOpen } from 'lucide-react';
 import { ShinyButton } from '../components/ui/shiny-button';
 import { getSavedTheme, applyTheme } from '../utils/theme';
+import { parsePurposeString } from '../utils/keperluan';
 
 const STATUS_MAP = {
   pending: { label: 'Menunggu Approval', class: 'bg-amber-500/15 text-amber-800 dark:text-yellow-400 border-amber-500/30' },
   approved: { label: 'Disetujui', class: 'bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40' },
-  letter_ready: { label: 'Surat Siap', class: 'bg-primary/15 text-primary border-primary/40' },
+  letter_ready: { label: 'Disetujui (Siap Diambil)', class: 'bg-teal-500/15 text-teal-700 dark:text-teal-400 border-teal-500/40' },
   picked_up: { label: 'Diambil', class: 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/40' },
   active: { label: 'Sedang Dipinjam', class: 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/40' },
   rejected: { label: 'Ditolak', class: 'bg-destructive/15 text-destructive border-destructive/40' },
@@ -373,7 +374,7 @@ export default function Dashboard() {
   const renderNotifications = () => {
     const NOTIF_RULES = {
       approved:      { icon: <CheckCircle2 className="w-5 h-5" />, cls: 'bg-green-500/10 text-green-500',      text: b => `Booking ${b.itemsLabel} disetujui admin.` },
-      letter_ready:  { icon: <CalendarDays className="w-5 h-5" />, cls: 'bg-primary/10 text-primary',      text: b => `Surat peminjaman ${b.itemsLabel} sudah siap diambil.` },
+      letter_ready:  { icon: <CheckCircle2 className="w-5 h-5" />, cls: 'bg-teal-500/10 text-teal-500',         text: b => `Peminjaman ${b.itemsLabel} telah disetujui admin dan alat siap diambil di studio.` },
       rejected:      { icon: <AlertCircle className="w-5 h-5" />,    cls: 'bg-destructive/10 text-destructive',  text: b => `Booking ${b.itemsLabel} ditolak. ${b.rejectedReason ? 'Alasan: ' + b.rejectedReason : ''}` },
       returned_late: { icon: <AlertTriangle className="w-5 h-5" />,    cls: 'bg-destructive/10 text-destructive',  text: b => `Pengembalian ${b.itemsLabel} terlambat${b.fineAmount ? ', denda Rp ' + b.fineAmount.toLocaleString('id-ID') : ''}.` },
       returned:      { icon: <CheckCircle2 className="w-5 h-5" />,   cls: 'bg-foreground/10 text-foreground',      text: b => `Alat ${b.itemsLabel} sudah tercatat dikembalikan.` },
@@ -595,6 +596,7 @@ export default function Dashboard() {
                     <thead>
                       <tr className="bg-muted/30 border-b border-border">
                         <th className="p-4 text-xs font-mono text-foreground/50 uppercase tracking-wider">Tanggal</th>
+                        <th className="p-4 text-xs font-mono text-foreground/50 uppercase tracking-wider">Keperluan</th>
                         <th className="p-4 text-xs font-mono text-foreground/50 uppercase tracking-wider">Alat</th>
                         <th className="p-4 text-xs font-mono text-foreground/50 uppercase tracking-wider">Status</th>
                         <th className="p-4 text-xs font-mono text-foreground/50 uppercase tracking-wider">Aksi</th>
@@ -602,16 +604,28 @@ export default function Dashboard() {
                     </thead>
                     <tbody className="divide-y divide-border">
                         {bookings.length === 0 ? (
-                          <tr><td colSpan="4" className="text-center p-8 text-foreground/50 font-mono text-sm">Belum ada riwayat peminjaman.</td></tr>
+                          <tr><td colSpan="5" className="text-center p-8 text-foreground/50 font-mono text-sm">Belum ada riwayat peminjaman.</td></tr>
                         ) : (
                           bookings.map(b => {
                             const sMap = STATUS_MAP[b.status?.toLowerCase()] || { label: b.status || 'Tidak Lengkap', class: 'bg-muted text-foreground/50 border-dashed' };
                             const itemsArr = b.items ? (Array.isArray(b.items) ? b.items : Object.values(b.items)) : [];
                             const itemsList = itemsArr.length > 0 ? itemsArr.map(i => i.name).join(', ') : (b.itemReported || b.alat || b.purpose || b.origin || '-');
-                            const shortItems = itemsList.length > 35 ? itemsList.substring(0,35) + '...' : itemsList;
+                            const shortItems = itemsList.length > 30 ? itemsList.substring(0,30) + '...' : itemsList;
+                            const parsed = parsePurposeString(b.purpose);
+                            const CatIcon = parsed.category.icon;
                             return (
                               <tr key={b.id || Math.random()} className="hover:bg-accent/30 transition-colors">
-                                <td className="p-4 text-sm font-medium">{fmtD(b.createdAt || b.timestamp || b.dateStart || b.startDate)}</td>
+                                <td className="p-4 text-sm font-medium whitespace-nowrap">{fmtD(b.createdAt || b.timestamp || b.dateStart || b.startDate)}</td>
+                                <td className="p-4">
+                                  <div className="flex flex-col gap-1">
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold border ${parsed.category.badgeColor} w-fit`}>
+                                      <CatIcon className="w-3 h-3" /> {parsed.category.badge}
+                                    </span>
+                                    <div className="text-xs text-foreground/75 truncate max-w-[180px]" title={parsed.details || b.purpose}>
+                                      {parsed.details || b.purpose || '-'}
+                                    </div>
+                                  </div>
+                                </td>
                                 <td className="p-4 text-sm text-foreground/80">{shortItems || '-'}</td>
                                 <td className="p-4">
                                   <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${sMap.class}`}>
@@ -755,9 +769,20 @@ export default function Dashboard() {
                   <span className="font-mono text-xs text-foreground/50 uppercase tracking-wider">Periode</span>
                   <span className="font-medium text-right">{fmtD(b.dateStart)} <br/> s/d {fmtD(b.dateEnd)}</span>
                 </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/50 text-sm">
+                  <span className="font-mono text-xs text-foreground/50 uppercase tracking-wider shrink-0 mr-4">Kategori Keperluan</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border ${parsePurposeString(b.purpose).category.badgeColor}`}>
+                    {React.createElement(parsePurposeString(b.purpose).category.icon, { className: "w-3.5 h-3.5" })}
+                    {parsePurposeString(b.purpose).category.badge}
+                  </span>
+                </div>
                 <div className="flex justify-between items-start py-2 border-b border-border/50 text-sm">
-                  <span className="font-mono text-xs text-foreground/50 uppercase tracking-wider shrink-0 mr-4">Tujuan</span>
-                  <span className="font-medium text-right">{b.purpose || '-'}</span>
+                  <span className="font-mono text-xs text-foreground/50 uppercase tracking-wider shrink-0 mr-4">{parsePurposeString(b.purpose).category.fieldLabel}</span>
+                  <span className="font-medium text-right text-foreground/90">{parsePurposeString(b.purpose).details || b.purpose || '-'}</span>
+                </div>
+                <div className="bg-teal/5 border border-teal/20 rounded-xl p-3 text-xs text-foreground/75 flex items-start gap-2.5">
+                  <span className="text-teal font-bold shrink-0">ℹ️ Info:</span>
+                  <span>Persetujuan peminjaman berlaku langsung. Jika kegiatan Anda memerlukan surat fisik bertanda tangan resmi, silakan berkoordinasi langsung dengan Sekretaris Dakwah TV.</span>
                 </div>
                 
                 <div className="py-2 border-b border-border/50 text-sm">

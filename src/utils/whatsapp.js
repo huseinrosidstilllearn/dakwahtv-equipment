@@ -5,7 +5,7 @@ Halo Admin! Ada pengajuan booking baru masuk nih:
 
 📋 *ID Booking:* {id}
 👤 *Nama:* {nama}
-🎬 *Program:* {program}
+🎯 *Keperluan:* {keperluan}
 📅 *Pinjam:* {tgl_pinjam}
 📅 *Kembali:* {tgl_kembali}
 
@@ -20,14 +20,14 @@ _Jangan Balas Pesan ini_`,
 Pengajuan booking alat kamu sudah masuk dan tercatat di sistem:
 
 📋 *ID Booking:* {id}
-🎬 *Program:* {program}
+🎯 *Keperluan:* {keperluan}
 📅 *Pinjam:* {tgl_pinjam}
 📅 *Kembali:* {tgl_kembali}
 
 Status saat ini: *MENUNGGU PERSETUJUAN* admin ⏳
 Mohon ditunggu sebentar ya kak.
 
-Jika booking sudah disetujui, link Surat Peminjaman Alat (SPA PDF) resmi akan dikirim otomatis lewat chat ini 🔔
+ℹ️ *Catatan:* Jika instansi atau kegiatan kamu memerlukan surat izin fisik resmi bertanda tangan, pengurusan surat diproses melalui Sekretaris Dakwah TV.
 
 Thank you! 🙏✨
 
@@ -39,14 +39,12 @@ _Jangan Balas Pesan ini_`,
 
 Yeay! Booking alat kamu dengan ID *{id}* sudah *DISETUJUI*! ✅🎉
 
-🎬 *Program:* {program}
+🎯 *Keperluan:* {keperluan}
 📅 *Pinjam:* {tgl_pinjam}
 📅 *Kembali:* {tgl_kembali}
 
-Surat Peminjaman Alat (SPA PDF) resmi bisa langsung diunduh di sini ya (format PDF ringan & otomatis) 👇
-🔗 {link_surat}
-
-Nanti tinggal tunjukkan suratnya saat ambil alat di studio. Ditunggu ya! 🎥✨
+Alat sudah disiapkan dan bisa langsung diambil di studio Dakwah TV sesuai jadwal ya kak. 🎥✨
+(Catatan: Jika memerlukan surat fisik resmi bertanda tangan, silakan berkoordinasi dengan Sekretaris Dakwah TV).
 
 🤖 *Bot Dakwah TV Equipment* 🎬
 

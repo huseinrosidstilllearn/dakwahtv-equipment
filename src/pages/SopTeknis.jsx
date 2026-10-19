@@ -120,7 +120,7 @@ const SopTeknis = () => {
             <SectionHeading id="peminjaman-alat" title="Peminjaman Alat" />
             <ul className="list-disc pl-5 space-y-2 text-foreground/80 leading-relaxed">
               <li>Setiap peminjaman alat Dakwah TV harus diketahui Teknis dan Eksekutif Produser.</li>
-              <li>Peminjam harus tercatat dan menyerahkan SPA (Surat Peminjaman Alat) maksimal H-3.</li>
+              <li>Peminjam harus tercatat melalui sistem katalog peminjaman online maksimal H-3. Jika kegiatan memerlukan berkas surat fisik resmi (SPA/Izin), pengurusan dilakukan secara langsung melalui Sekretaris Dakwah TV.</li>
               <li>Alat yang dipinjam untuk produksi saat <em>weekend</em> harus dikembalikan pada anggota teknis terdekat, tidak diperkenankan mengalihkan alat secara langsung. Pengembalian harus bertemu langsung dengan Teknis.</li>
               <li>Lama peminjaman dilaksanakan sesuai jam kerja yaitu <strong>08.00 – 17.00</strong>, kecuali ada event/produksi malam hari. Peminjaman bagi selain kru Dakwah TV maksimal 1x24 jam.</li>
               <li><strong>Alat tidak boleh dibawa pulang</strong> (sanksi berlaku), kecuali produksi saat <em>weekend</em> atau hari libur.</li>

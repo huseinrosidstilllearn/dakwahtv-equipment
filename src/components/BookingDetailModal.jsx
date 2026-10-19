@@ -5,13 +5,14 @@ import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { uploadFileToR2 } from '../utils/uploader';
 import SignaturePad from './SignaturePad';
+import { parsePurposeString } from '../utils/keperluan';
 
 const BK_STATUS_LABEL = {
   pending: "Menunggu Approval",
   approved: "Disetujui",
   rejected: "Ditolak",
   expired: "Kadaluarsa",
-  letter_ready: "Surat & Alat Siap Diambil",
+  letter_ready: "Disetujui (Siap Diambil)",
   picked_up: "Sedang Dipinjam",
   active: "Sedang Dipinjam",
   returned: "Selesai Dikembalikan",
@@ -44,10 +45,6 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
   if (!booking) return null;
 
   const isBlacklisted = false; // Add logic if needed based on user status
-
-  const handleGenerateClick = () => {
-    navigate(`/admin/surat/${booking.id || booking._key}`);
-  };
 
   const startReturnProcess = (status) => {
     setReturnStatus(status);
@@ -222,7 +219,16 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
                 </div>
               </div>
               <div className="bg-background border border-border p-3 rounded-lg">
-                <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">DEPARTEMEN</div>
+                <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">KATEGORI KEPERLUAN</div>
+                <div className="font-bold text-sm flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${parsePurposeString(booking.purpose).category.badgeColor}`}>
+                    {React.createElement(parsePurposeString(booking.purpose).category.icon, { className: "w-3.5 h-3.5" })}
+                    {parsePurposeString(booking.purpose).category.badge}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-background border border-border p-3 rounded-lg">
+                <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">{parsePurposeString(booking.purpose).category.deptLabel.toUpperCase()}</div>
                 <div className="font-bold text-sm">{booking.userDept || "-"}</div>
               </div>
               <div className="bg-background border border-border p-3 rounded-lg">
@@ -230,12 +236,18 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
                 <div className="font-bold text-sm">{booking.userPhone || "-"}</div>
               </div>
               <div className="bg-background border border-border p-3 rounded-lg">
-                <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">KEPERLUAN</div>
-                <div className="font-bold text-sm">{booking.purpose || "-"}</div>
-              </div>
-              <div className="bg-background border border-border p-3 rounded-lg">
                 <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">PERIODE</div>
                 <div className="font-bold text-sm font-mono tracking-tight">{fmtDate(booking.dateStart)} &ndash; {fmtDate(booking.dateEnd)}</div>
+              </div>
+              <div className="col-span-1 sm:col-span-2 bg-background border border-border p-3.5 rounded-lg">
+                <div className="text-[10px] text-foreground/50 uppercase font-mono tracking-wider mb-1">{parsePurposeString(booking.purpose).category.fieldLabel.toUpperCase()}</div>
+                <div className="font-bold text-sm text-foreground/90">{parsePurposeString(booking.purpose).details || booking.purpose || "-"}</div>
+              </div>
+              <div className="col-span-1 sm:col-span-2 bg-teal/5 border border-teal/20 rounded-lg p-3 flex items-start gap-2.5 text-xs text-foreground/75">
+                <FileText className="w-4 h-4 text-teal flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-foreground">Persetujuan Langsung:</span> Alat dapat langsung disetujui & diambil sesuai jadwal. Jika kegiatan membutuhkan surat fisik bertanda tangan resmi (SPA / Izin), silakan koordinasi langsung melalui Sekretaris Dakwah TV.
+                </div>
               </div>
             </div>
           </div>
@@ -367,18 +379,6 @@ export default function BookingDetailModal({ booking: rawBooking, onClose, onApp
                     <X className="w-4 h-4" /> Tolak
                   </button>
                 </>
-              )}
-
-              {(booking.status === 'pending' || booking.status === 'approved' || booking.status === 'letter_ready' || booking.status === 'picked_up' || booking.status === 'active' || booking.status === 'returned' || booking.status === 'returned_late') && (
-                <button onClick={handleGenerateClick} className="flex items-center gap-2 px-5 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border font-bold text-sm rounded-lg transition-colors">
-                  <FileText className="w-4 h-4 text-teal" /> Buka Generator Surat (SPA)
-                </button>
-              )}
-
-              {booking.status === 'approved' && (
-                <button onClick={() => onMarkLetterReady && onMarkLetterReady(booking)} className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground font-bold text-sm rounded-lg hover:bg-primary/90 transition-colors">
-                  Surat & Alat Siap
-                </button>
               )}
 
               {(booking.status === 'letter_ready' || booking.status === 'approved') && (

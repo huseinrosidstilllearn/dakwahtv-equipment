@@ -11,6 +11,7 @@ import { Search, Filter, CalendarDays, AlertTriangle, CheckCircle2, AlertCircle,
 import { sendWhatsAppMessage, sanitizeWaTemplate, DEFAULT_WA_TEMPLATES } from '../utils/whatsapp';
 import { sendTelegramAlert, formatBookingTelegramMessage } from '../utils/telegram';
 import { sortCategories } from '../utils/categories';
+import { formatPurposeString, getKeperluanConfig } from '../utils/keperluan';
 import { getSavedTheme, applyTheme } from '../utils/theme';
 
 const STATUS_LABEL = { ready: "Ready", attention: "Maintenance", unavailable: "Not Ready" };
@@ -336,6 +337,10 @@ export default function Katalog() {
         }
       }
 
+      const rawCategory = form.category_purpose ? form.category_purpose.value : 'program';
+      const rawPurpose = form.purpose ? form.purpose.value : '';
+      const formattedPurpose = formatPurposeString(rawCategory, rawPurpose);
+
       const bookingData = {
         id: bid,
         uid: currentUser.id,
@@ -344,7 +349,7 @@ export default function Katalog() {
         user_nim: form.nim ? form.nim.value : '',
         dept: form.dept ? form.dept.value : '',
         origin: form.origin ? form.origin.value : 'internal',
-        purpose: form.purpose ? form.purpose.value : '',
+        purpose: formattedPurpose,
         date_start: form.start.value,
         date_end: form.end.value,
         doc_url: docUrl,
@@ -389,9 +394,10 @@ export default function Katalog() {
         message = message.replace(/\{nama\}/g, form.name.value);
         message = message.replace(/\{id\}/g, bid);
         message = message.replace(/\{program\}/g, form.dept.value || '-');
+        message = message.replace(/\{keperluan\}/g, formattedPurpose);
         message = message.replace(/\{tgl_pinjam\}/g, form.start.value.split('-').reverse().join('-'));
         message = message.replace(/\{tgl_kembali\}/g, form.end.value.split('-').reverse().join('-'));
-        message = message.replace(/\{link_surat\}/g, `https://dakwahtvequipment.pages.dev/surat/${bid}?auto=1&format=pdf`);
+        message = message.replace(/\{link_surat\}/g, '');
 
         sendWhatsAppMessage(adminWaList.join(','), message);
       }
@@ -405,9 +411,10 @@ export default function Katalog() {
         userMessage = userMessage.replace(/\{nama\}/g, form.name.value);
         userMessage = userMessage.replace(/\{id\}/g, bid);
         userMessage = userMessage.replace(/\{program\}/g, form.dept.value || '-');
+        userMessage = userMessage.replace(/\{keperluan\}/g, formattedPurpose);
         userMessage = userMessage.replace(/\{tgl_pinjam\}/g, form.start.value.split('-').reverse().join('-'));
         userMessage = userMessage.replace(/\{tgl_kembali\}/g, form.end.value.split('-').reverse().join('-'));
-        userMessage = userMessage.replace(/\{link_surat\}/g, `https://dakwahtvequipment.pages.dev/surat/${bid}?auto=1&format=pdf`);
+        userMessage = userMessage.replace(/\{link_surat\}/g, '');
 
         sendWhatsAppMessage(userPhone, userMessage);
       }
@@ -422,6 +429,7 @@ export default function Katalog() {
             id: bid,
             userName: form.name.value,
             userDept: form.dept.value,
+            purpose: formattedPurpose,
             userPhone: form.phone.value,
             dateStart: form.start.value,
             dateEnd: form.end.value

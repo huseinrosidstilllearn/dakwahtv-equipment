@@ -230,7 +230,7 @@ export default function Home() {
               </div>
 
               <div className="mt-8 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-foreground/50">
-                <span>Dukungan PDF Surat Peminjaman Alat (SPA) Otomatis</span>
+                <span>Persetujuan langsung & terintegrasi notifikasi sistem</span>
                 <span className="font-mono text-primary font-bold">Mulai Booking →</span>
               </div>
             </SpotlightCard>
@@ -286,7 +286,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-4 h-4 rounded-full bg-orange-500/10 text-orange-500 font-bold flex items-center justify-center text-[10px]">2</span>
-                    <span>Surat SPA disetujui admin</span>
+                    <span>Pengajuan disetujui langsung oleh admin</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-4 h-4 rounded-full bg-orange-500/10 text-orange-500 font-bold flex items-center justify-center text-[10px]">3</span>
@@ -321,7 +321,7 @@ export default function Home() {
                   </h3>
                   <p className="text-xs text-foreground/60 font-mono mb-3">{currentUser.email}</p>
                   <p className="text-foreground/70 text-xs sm:text-sm leading-relaxed mb-4">
-                    Lihat daftar riwayat peminjaman Anda, unduh ulang surat SPA PDF, dan perbarui profil peminjam.
+                    Lihat daftar riwayat peminjaman Anda, pantau status persetujuan alat, dan perbarui profil peminjam.
                   </p>
                 </div>
 

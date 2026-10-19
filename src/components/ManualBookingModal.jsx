@@ -4,6 +4,7 @@ import { supabase } from '../supabase';
 import { useToast } from '../context/ToastContext';
 import { sortCategories } from '../utils/categories';
 import { sendTelegramAlert, formatManualBookingTelegramMessage } from '../utils/telegram';
+import { KEPERLUAN_OPTIONS, getKeperluanConfig, formatPurposeString } from '../utils/keperluan';
 import CustomSelect from './ui/CustomSelect';
 import CustomDatePicker from './ui/CustomDatePicker';
 
@@ -11,7 +12,7 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', nim: '', dept: '', origin: '', purpose: '', dateStart: '', dateEnd: '', initialStatus: 'approved'
+    name: '', email: '', phone: '', nim: '', dept: '', origin: 'Internal Dakwah TV', category: 'program', purpose: '', dateStart: '', dateEnd: '', initialStatus: 'approved'
   });
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
@@ -47,6 +48,8 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
     try {
       const bid = crypto.randomUUID();
       
+      const formattedPurpose = formatPurposeString(formData.category, formData.purpose);
+
       const bookingData = {
         id: bid,
         uid: currentUser?.id || 'manual_admin',
@@ -55,7 +58,7 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
         user_nim: formData.nim || '',
         dept: formData.dept || '',
         origin: formData.origin || 'internal',
-        purpose: formData.purpose || 'Kegiatan Produksi Dakwah TV',
+        purpose: formattedPurpose,
         date_start: formData.dateStart,
         date_end: formData.dateEnd,
         status: formData.initialStatus || 'approved',
@@ -104,7 +107,7 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
               userName: formData.name,
               userDept: formData.dept,
               userPhone: formData.phone,
-              purpose: formData.purpose,
+              purpose: formattedPurpose,
               dateStart: formData.dateStart,
               dateEnd: formData.dateEnd,
               status: formData.initialStatus || 'approved'
@@ -148,6 +151,7 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
   }, {});
 
   const sortedCats = sortCategories(Object.keys(groupedInventory));
+  const keperluanConfig = getKeperluanConfig(formData.category);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
@@ -184,11 +188,7 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
                 <input required type="text" value={formData.phone} onChange={e=>setFormData({...formData, phone: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" placeholder="6281234..." />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Briefcase className="w-3 h-3"/> Departemen</label>
-                <input required type="text" value={formData.dept} onChange={e=>setFormData({...formData, dept: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" placeholder="Misal: Creative Media" />
-              </div>
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><MapPin className="w-3 h-3"/> Asal / Divisi</label>
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><MapPin className="w-3 h-3"/> Asal / Status</label>
                 <CustomSelect 
                   value={formData.origin} 
                   onChange={(val) => setFormData({ ...formData, origin: val })}
@@ -196,14 +196,57 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
                     { value: 'Internal Dakwah TV', label: 'Internal Dakwah TV', description: 'Kru & pengurus aktif Dakwah TV' },
                     { value: 'Eksternal', label: 'Eksternal', description: 'Peminjam luar divisi / ormawa lain' }
                   ]}
-                  placeholder="Pilih Asal/Divisi..."
+                  placeholder="Pilih Asal..."
                   icon={MapPin}
                 />
               </div>
+
+              {/* Kategori Keperluan (7 Opsi) */}
               <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><FileText className="w-3 h-3"/> Keperluan</label>
-                <textarea required value={formData.purpose} onChange={e=>setFormData({...formData, purpose: e.target.value})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none min-h-[60px]" placeholder="Misal: Syuting Liputan Kampus" />
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1">
+                  <FileText className="w-3 h-3 text-primary"/> Kategori Keperluan
+                </label>
+                <CustomSelect 
+                  value={formData.category} 
+                  onChange={(val) => setFormData({ ...formData, category: val })}
+                  options={KEPERLUAN_OPTIONS.map(opt => ({
+                    value: opt.value,
+                    label: opt.label,
+                    description: opt.desc,
+                    icon: opt.icon
+                  }))}
+                  placeholder="Pilih Kategori Keperluan..."
+                  icon={FileText}
+                />
               </div>
+
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1">
+                  <Briefcase className="w-3 h-3"/> {keperluanConfig.deptLabel}
+                </label>
+                <input 
+                  required 
+                  type="text" 
+                  value={formData.dept} 
+                  onChange={e=>setFormData({...formData, dept: e.target.value})} 
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none" 
+                  placeholder={keperluanConfig.deptPlaceholder} 
+                />
+              </div>
+
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-bold text-foreground/70 flex items-center gap-1">
+                  <FileText className="w-3 h-3"/> {keperluanConfig.fieldLabel}
+                </label>
+                <textarea 
+                  required 
+                  value={formData.purpose} 
+                  onChange={e=>setFormData({...formData, purpose: e.target.value})} 
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none min-h-[60px]" 
+                  placeholder={keperluanConfig.placeholder} 
+                />
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Calendar className="w-3 h-3"/> Tgl Ambil</label>
                 <CustomDatePicker
@@ -238,11 +281,14 @@ export default function ManualBookingModal({ isOpen, onClose, inventory, current
                   onChange={(val) => setFormData({ ...formData, initialStatus: val })}
                   options={[
                     { value: 'pending', label: 'Menunggu Approval (Pending)', description: 'Masuk antrean persetujuan' },
-                    { value: 'approved', label: 'Disetujui (Menunggu Diambil)', description: 'Siap diambil & cetak SPA' },
+                    { value: 'approved', label: 'Disetujui (Siap Diambil)', description: 'Peminjaman disetujui & siap serah terima' },
                     { value: 'active', label: 'Sedang Dipinjam (Active)', description: 'Barang sudah dibawa peminjam' },
                     { value: 'returned', label: 'Selesai (Returned)', description: 'Sudah dikembalikan ke inventaris' }
                   ]}
                 />
+                <p className="text-[11px] text-foreground/50 mt-1 leading-relaxed">
+                  * Persetujuan peminjaman langsung aktif. Jika peminjam membutuhkan berkas surat fisik bertanda tangan resmi, proses dilakukan langsung melalui Sekretaris Dakwah TV.
+                </p>
               </div>
             </div>
           </div>

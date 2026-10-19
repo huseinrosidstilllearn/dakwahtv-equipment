@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import CustomSelect from './ui/CustomSelect';
 import CustomDatePicker from './ui/CustomDatePicker';
+import { KEPERLUAN_OPTIONS, getKeperluanConfig } from '../utils/keperluan';
 
 export default function CartModal({ 
   isOpen, 
@@ -21,8 +22,11 @@ export default function CartModal({
   checkDateConflicts 
 }) {
   const [origin, setOrigin] = useState('internal');
+  const [keperluanType, setKeperluanType] = useState('program');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  const activeKeperluan = getKeperluanConfig(keperluanType);
 
   const handleStartDateChange = (val) => {
     setStartDate(val);
@@ -101,7 +105,7 @@ export default function CartModal({
               <div>
                 <p className="font-bold text-xs uppercase tracking-wider mb-1">Perlu Login Akun</p>
                 <p className="text-xs leading-relaxed mb-3 opacity-90">
-                  Untuk mengajukan peminjaman alat resmi dan penerbitan surat SPA, Anda wajib masuk dengan akun terdaftar.
+                  Untuk mengajukan peminjaman alat resmi, Anda wajib masuk dengan akun terdaftar.
                 </p>
                 <button 
                   type="button" 
@@ -121,7 +125,7 @@ export default function CartModal({
                 Peralatan Yang Dipinjam ({cart.length})
               </label>
               {cart.length > 0 && (
-                <span className="text-[10px] text-foreground/40 font-mono">Siap diterbitkan SPA</span>
+                <span className="text-[10px] text-foreground/40 font-mono">Siap diajukan peminjaman</span>
               )}
             </div>
 
@@ -203,6 +207,24 @@ export default function CartModal({
 
               <div>
                 <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
+                  Kategori Keperluan Peminjaman
+                </label>
+                <input type="hidden" name="category_purpose" value={keperluanType} />
+                <CustomSelect
+                  name="select_category_purpose"
+                  value={keperluanType}
+                  onChange={setKeperluanType}
+                  options={KEPERLUAN_OPTIONS.map(opt => ({
+                    value: opt.value,
+                    label: opt.label,
+                    description: opt.desc
+                  }))}
+                  icon={activeKeperluan.icon}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
                   Asal Peminjam
                 </label>
                 <CustomSelect
@@ -223,7 +245,7 @@ export default function CartModal({
                     <FileText className="w-3.5 h-3.5 text-primary" /> Dokumen Pendukung 
                     <span className="text-destructive">*wajib</span>
                   </label>
-                  <p className="text-[11px] text-foreground/50">Upload foto KTM atau Surat Pengantar peminjaman.</p>
+                  <p className="text-[11px] text-foreground/50">Upload foto KTM atau Kartu Identitas Peminjam.</p>
                   <input 
                     type="file" 
                     name="doc" 
@@ -235,13 +257,13 @@ export default function CartModal({
               
               <div>
                 <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
-                  Departemen / Unit Produksi
+                  {activeKeperluan.deptLabel || "Departemen / Unit Produksi"}
                 </label>
                 <div className="relative">
                   <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
                   <input 
                     name="dept" 
-                    placeholder="Misal: Creative Media / Program Berita" 
+                    placeholder={activeKeperluan.deptPlaceholder || "Misal: Creative Media / Program Berita"} 
                     className="w-full bg-muted/40 border border-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary text-xs transition-all" 
                   />
                 </div>
@@ -264,12 +286,12 @@ export default function CartModal({
 
               <div>
                 <label className="block text-[10px] font-mono text-foreground/60 uppercase tracking-wider mb-1 font-bold">
-                  Keperluan Produksi / Syuting
+                  {activeKeperluan.fieldLabel || "Keperluan / Rincian Kegiatan"}
                 </label>
                 <textarea 
                   name="purpose" 
                   rows="2" 
-                  placeholder="Sebutkan kegiatan syuting atau proker dengan jelas..." 
+                  placeholder={activeKeperluan.placeholder || "Sebutkan nama kegiatan atau keperluan dengan jelas..."} 
                   className="w-full bg-muted/40 border border-border rounded-xl p-3 focus:outline-none focus:border-primary text-xs transition-all resize-none" 
                 />
               </div>
@@ -334,8 +356,19 @@ export default function CartModal({
               </div>
             )}
             
+            {/* Info Surat via Sekretaris */}
+            <div className="p-3.5 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-2.5 text-xs text-foreground/80">
+              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold text-foreground block text-[11px]">Pengurusan Surat Izin Resmi (SPA):</span>
+                <p className="text-[11px] text-foreground/70 leading-relaxed">
+                  Peminjaman alat pada web ini langsung diproses dan disetujui oleh Tim Teknisi / Admin Alat. Jika instansi atau kegiatan Anda memerlukan surat izin fisik resmi bertanda tangan, surat diterbitkan terpisah melalui <strong>Sekretaris Dakwah TV</strong>.
+                </p>
+              </div>
+            </div>
+
             {/* Drawer Action Buttons */}
-            <div className="pt-3 flex flex-col gap-2">
+            <div className="pt-2 flex flex-col gap-2">
               <button 
                 type="submit" 
                 disabled={isSubmitting || (conflictWarn && conflictWarn.hasConflict) || cart.length === 0 || !startDate || !endDate} 

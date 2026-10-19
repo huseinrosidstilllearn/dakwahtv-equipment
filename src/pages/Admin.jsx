@@ -18,6 +18,7 @@ import { testGotenbergHealth, testGotenbergConvertSample, downloadTestPdfBlob, o
 import { checkSystemHealth } from '../utils/systemHealth';
 import { sendTelegramAlert, testTelegramBotConnection, formatBookingStatusTelegramMessage, formatBookingDeletedTelegramMessage } from '../utils/telegram';
 import { sortCategories } from '../utils/categories';
+import { parsePurposeString, getKeperluanConfig, KEPERLUAN_OPTIONS } from '../utils/keperluan';
 import BookingDetailModal from '../components/BookingDetailModal';
 import ManualBookingModal from '../components/ManualBookingModal';
 import QrCodeModal from '../components/QrCodeModal';
@@ -30,10 +31,10 @@ import { getSavedTheme, applyTheme } from '../utils/theme';
 
 const BK_STATUS_LABEL = {
   pending: "Menunggu Approval",
-  approved: "Disetujui (Menunggu Diambil)",
+  approved: "Disetujui (Siap Diambil)",
   rejected: "Ditolak",
   expired: "Kadaluarsa",
-  letter_ready: "Surat & Alat Siap Diambil",
+  letter_ready: "Disetujui (Siap Diambil)",
   picked_up: "Sedang Dipinjam",
   active: "Sedang Dipinjam",
   returned: "Selesai Dikembalikan",
@@ -404,14 +405,10 @@ export default function Admin() {
     msg = msg.replace(/\{nama\}/g, booking.userName || booking.name || "");
     msg = msg.replace(/\{id\}/g, booking.id || key || "");
     msg = msg.replace(/\{program\}/g, booking.userDept || booking.dept || "-");
+    msg = msg.replace(/\{keperluan\}/g, booking.purpose || booking.keperluan || booking.userDept || "-");
     msg = msg.replace(/\{tgl_pinjam\}/g, fmtDMY(booking.dateStart));
     msg = msg.replace(/\{tgl_kembali\}/g, fmtDMY(booking.dateEnd));
-
-    const rawDoc = dynamicDocUrl || booking.doc_url || booking.pdf_url;
-    const finalLetterLink = (rawDoc && (rawDoc.includes('.pdf') || rawDoc.includes('spa-pdfs') || rawDoc.includes('dakwahtv.my.id') || rawDoc.includes('r2.dev')))
-      ? rawDoc.replace(/https:\/\/[^/]+\.r2\.dev/, 'https://spa.dakwahtv.my.id')
-      : `https://dakwahtvequipment.pages.dev/surat/${booking.id || key}?auto=1&format=pdf`;
-    msg = msg.replace(/\{link_surat\}/g, finalLetterLink);
+    msg = msg.replace(/\{link_surat\}/g, '');
     return msg;
   };
 
@@ -664,23 +661,7 @@ export default function Admin() {
 
       toast.success(feedbackMsg, "Status Diperbarui");
 
-      let dynamicDocUrl = booking?.doc_url;
-      if (newStatus === 'approved' && (!dynamicDocUrl || !dynamicDocUrl.includes('.pdf'))) {
-        try {
-          const effectiveGotenbergUrl = gotenbergUrl || 'https://gotenberg.dakwahtv.my.id';
-          toast.info("Mengonversi berkas surat PDF ke R2...", "Memproses SPA");
-          dynamicDocUrl = await renderAndUploadSpaPdfDirect({
-            booking,
-            gotenbergUrl: effectiveGotenbergUrl
-          });
-          if (dynamicDocUrl) {
-            if (booking) booking.doc_url = dynamicDocUrl;
-            await supabase.from('bookings').update({ doc_url: dynamicDocUrl }).eq('id', bookingKey);
-          }
-        } catch (genErr) {
-          console.warn("Auto-generate SPA on approval notice:", genErr);
-        }
-      }
+      const dynamicDocUrl = booking?.doc_url || '';
 
       if (booking && booking.userPhone) {
         const phone = booking.userPhone.replace(/[^0-9]/g, '');
@@ -1398,6 +1379,23 @@ export default function Admin() {
         <div className="flex-1">
           <div className="font-mono text-[10px] text-foreground/50 mb-1 uppercase tracking-widest">ID: {b.id || b._key}</div>
           <div className="font-bold text-lg md:text-xl mb-1 flex items-center text-foreground">{b.userName || "-"}{getOriginBadge(b)}</div>
+          
+          {(() => {
+            const purposeInfo = parsePurposeString(b.purpose);
+            return (
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${purposeInfo.category.badgeColor}`}>
+                  {purposeInfo.category.badge}
+                </span>
+                {purposeInfo.details && (
+                  <span className="text-xs text-foreground/80 font-medium truncate max-w-md">
+                    {purposeInfo.details}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="text-xs text-foreground/70 mb-1 flex items-center gap-2">
             <span>{b.userDept || ""}</span>
             {b.userNim && <span className="font-mono text-foreground/50">• NIM: {b.userNim}</span>}
@@ -1425,18 +1423,10 @@ export default function Admin() {
           
           {b.status === 'pending' && (
             <>
-              <Link 
-                to={`/admin/surat/${b.id || b._key}`}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-xs font-bold transition-colors flex justify-center items-center gap-1.5 shadow-sm mt-1"
-                title="Siapkan dan sesuaikan dokumen surat peminjaman alat (SPA) sebelum disetujui"
-              >
-                <FileText className="w-3.5 h-3.5 text-teal" /> Siapkan Surat (SPA)
-              </Link>
               <button 
                 className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex justify-center items-center gap-1.5 shadow-sm mt-1"
                 onClick={(e) => { e.stopPropagation(); updateStatus(bKey, b.id || b.userName, 'approved'); }}
-                title="Setujui permohonan peminjaman alat ini dan kirim surat langsung via WhatsApp"
+                title="Setujui permohonan peminjaman alat ini langsung"
               >
                 <Check className="w-3.5 h-3.5" /> Setujui Booking
               </button>
@@ -1452,14 +1442,6 @@ export default function Admin() {
 
           {(b.status === 'approved' || b.status === 'letter_ready') && (
             <>
-              <Link 
-                to={`/admin/surat/${b.id || b._key}`}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-xs font-bold transition-colors flex justify-center items-center gap-1.5 shadow-sm mt-1"
-                title="Buka atau unduh dokumen surat peminjaman alat (SPA)"
-              >
-                <FileText className="w-3.5 h-3.5 text-teal" /> Lihat Surat (SPA)
-              </Link>
               <button 
                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex justify-center items-center gap-1.5 shadow-sm mt-1"
                 onClick={(e) => { e.stopPropagation(); updateStatus(bKey, b.id || b.userName, 'active'); }}
