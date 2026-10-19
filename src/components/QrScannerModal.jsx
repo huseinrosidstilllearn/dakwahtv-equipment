@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, Camera, RefreshCw, CheckCircle2, AlertTriangle, ArrowRight, Package, Upload } from 'lucide-react';
+import { X, Camera, RefreshCw, CheckCircle2, AlertTriangle, ArrowRight, Package, Upload, ChevronDown } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import CustomSelect from './ui/CustomSelect';
 
 /**
  * QR Code Scanner Modal using html5-qrcode
@@ -243,16 +242,21 @@ export default function QrScannerModal({ isOpen, onClose, inventory = [], bookin
               {/* Camera Switcher & File Upload */}
               <div className="flex items-center justify-between gap-2 pt-1">
                 {cameras.length > 1 && (
-                  <CustomSelect
-                    value={selectedCameraId || ''}
-                    onChange={(val) => startCamera(val)}
-                    options={cameras.map(cam => ({
-                      value: cam.id,
-                      label: cam.label || `Kamera ${cam.id.slice(0, 5)}`
-                    }))}
-                    icon={Camera}
-                    className="min-w-[180px]"
-                  />
+                  <div className="relative min-w-[180px]">
+                    <select
+                      value={selectedCameraId || ''}
+                      onChange={(e) => startCamera(e.target.value)}
+                      className="w-full bg-background border border-border focus:border-teal rounded-xl pl-8 pr-8 py-1.5 text-xs text-foreground outline-none appearance-none cursor-pointer dark:[color-scheme:dark]"
+                    >
+                      {cameras.map(cam => (
+                        <option key={cam.id} value={cam.id} className="bg-card text-foreground">
+                          {cam.label || `Kamera ${cam.id.slice(0, 5)}`}
+                        </option>
+                      ))}
+                    </select>
+                    <Camera className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/40 pointer-events-none" />
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/40 pointer-events-none" />
+                  </div>
                 )}
 
                 <div className="flex items-center gap-2 ml-auto">
